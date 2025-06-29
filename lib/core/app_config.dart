@@ -39,7 +39,7 @@ class AppColors {
   static const Color primaryGreen = Color(0xFF2E7D32);
   static const Color lightGreen = Color(0xFF66BB6A);
   static const Color darkGreen = Color(0xFF1B5E20);
-  
+
   /// アクセントカラー（中国古典の金系）
   static const Color accentGold = Color(0xFFFFB300);
   static const Color lightGold = Color(0xFFFFC947);
@@ -117,7 +117,7 @@ class AppTheme {
       ),
       useMaterial3: true,
       fontFamily: 'Noto Sans JP',
-      
+
       // AppBar テーマ
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.primaryGreen,
@@ -132,7 +132,7 @@ class AppTheme {
       ),
 
       // カード テーマ
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
