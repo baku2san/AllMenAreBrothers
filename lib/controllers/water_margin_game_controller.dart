@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' hide Hero;
 import '../data/water_margin_map.dart';
 import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../models/advanced_battle_system.dart';
+import '../services/game_save_service.dart';
 import '../core/app_config.dart';
 import '../utils/app_utils.dart';
 
@@ -102,11 +104,14 @@ class WaterMarginGameController extends ChangeNotifier {
 
     // ターン処理
     final income = getTotalIncome();
-    
+
     _gameState = _gameState.copyWith(
       currentTurn: _gameState.currentTurn + 1,
       playerGold: _gameState.playerGold + income,
     );
+
+    // オートセーブを実行
+    autoSave();
 
     _addEventLog('ターン${_gameState.currentTurn}が開始されました（収入: $income両）');
     notifyListeners();
@@ -167,29 +172,37 @@ class WaterMarginGameController extends ChangeNotifier {
   void attackProvince(String targetProvinceId) {
     final sourceProvince = selectedProvince;
     final targetProvince = _gameState.provinces[targetProvinceId];
-    
+
     if (sourceProvince == null || targetProvince == null) return;
     if (sourceProvince.controller != Faction.liangshan) return;
     if (targetProvince.controller == Faction.liangshan) return;
-    
-    // 簡易戦闘システム
-    final attackerPower = sourceProvince.currentTroops;
-    final defenderPower = targetProvince.currentTroops;
-    
-    final attackerWins = attackerPower > defenderPower;
-    
-    if (attackerWins) {
-      final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
-      updatedProvinces[targetProvinceId] = targetProvince.copyWith(
-        controller: Faction.liangshan,
-      );
-      
-      _gameState = _gameState.copyWith(provinces: updatedProvinces);
-      _addEventLog('${targetProvince.name}を占領しました！');
-    } else {
-      _addEventLog('${targetProvince.name}の攻略に失敗しました');
-    }
-    
+
+    // 高度な戦闘システムを使用
+    final attacker = BattleParticipant(
+      faction: sourceProvince.controller,
+      troops: sourceProvince.currentTroops,
+      heroes: _getHeroesInProvince(sourceProvince.id),
+      province: sourceProvince,
+    );
+
+    final defender = BattleParticipant(
+      faction: targetProvince.controller,
+      troops: targetProvince.currentTroops,
+      heroes: _getHeroesInProvince(targetProvince.id),
+      province: targetProvince,
+    );
+
+    // 戦闘実行（地形と戦闘タイプは将来拡張予定）
+    final battleResult = AdvancedBattleSystem.conductBattle(
+      attacker: attacker,
+      defender: defender,
+      battleType: BattleType.fieldBattle,
+      terrain: BattleTerrain.plains,
+    );
+
+    // 戦闘結果を反映
+    _applyBattleResult(battleResult, sourceProvince.id, targetProvince.id);
+
     notifyListeners();
   }
 
@@ -217,9 +230,7 @@ class WaterMarginGameController extends ChangeNotifier {
 
   /// プレイヤーの州一覧を取得
   List<Province> getPlayerProvinces() {
-    return _gameState.provinces.values
-        .where((province) => province.controller == Faction.liangshan)
-        .toList();
+    return _gameState.provinces.values.where((province) => province.controller == Faction.liangshan).toList();
   }
 
   /// イベントログに追加
@@ -230,4 +241,117 @@ class WaterMarginGameController extends ChangeNotifier {
       _eventLog = _eventLog.take(AppConstants.maxEventLogEntries).toList();
     }
   }
+
+  /// 州にいる英雄を取得
+  List<Hero> _getHeroesInProvince(String provinceId) {
+    return _gameState.heroes.where((hero) => hero.currentProvinceId == provinceId).toList();
+  }
+
+  /// 戦闘結果を適用
+  void _applyBattleResult(AdvancedBattleResult result, String sourceProvinceId, String targetProvinceId) {
+    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
+
+    // 攻撃側の損失を反映
+    final sourceProvince = updatedProvinces[sourceProvinceId]!;
+    updatedProvinces[sourceProvinceId] = sourceProvince.copyWith(
+      currentTroops: (sourceProvince.currentTroops - result.attackerLosses).clamp(0, 999999),
+    );
+
+    // 防御側の損失を反映
+    final targetProvince = updatedProvinces[targetProvinceId]!;
+    updatedProvinces[targetProvinceId] = targetProvince.copyWith(
+      currentTroops: (targetProvince.currentTroops - result.defenderLosses).clamp(0, 999999),
+      controller: result.territoryConquered ? sourceProvince.controller : targetProvince.controller,
+    );
+
+    // 英雄の経験値を更新（将来実装）
+    // TODO: result.heroResults を使って英雄の経験値とレベルアップを処理
+
+    _gameState = _gameState.copyWith(provinces: updatedProvinces);
+
+    // 戦闘結果をログに記録
+    if (result.territoryConquered) {
+      _addEventLog('${targetProvince.name}を占領しました！ 敵${result.defenderLosses}、味方${result.attackerLosses}の損失');
+    } else {
+      _addEventLog('${targetProvince.name}の攻略に失敗しました。敵${result.defenderLosses}、味方${result.attackerLosses}の損失');
+    }
+
+    // 特殊イベントをログに追加
+    for (final event in result.specialEvents) {
+      _addEventLog(event);
+    }
+
+    // 戦闘結果ダイアログを表示する準備（UIレイヤーから呼び出し）
+    _lastBattleResult = BattleResultInfo(
+      result: result,
+      sourceProvinceName: sourceProvince.name,
+      targetProvinceName: targetProvince.name,
+    );
+
+    notifyListeners();
+  }
+
+  // 最後の戦闘結果を保持（UIから参照するため）
+  BattleResultInfo? _lastBattleResult;
+
+  /// 最後の戦闘結果を取得
+  BattleResultInfo? get lastBattleResult => _lastBattleResult;
+
+  /// 戦闘結果を消去
+  void clearBattleResult() {
+    _lastBattleResult = null;
+    notifyListeners();
+  }
+
+  /// ゲームデータを保存
+  Future<bool> saveGame({String? saveName}) async {
+    return await GameSaveService.saveGame(_gameState, saveName: saveName);
+  }
+
+  /// オートセーブを実行
+  Future<bool> autoSave() async {
+    return await GameSaveService.saveGame(_gameState, isAutoSave: true);
+  }
+
+  /// ゲームデータを読み込み
+  Future<bool> loadGame(String saveName) async {
+    final loadedState = await GameSaveService.loadGame(saveName);
+    if (loadedState != null) {
+      _gameState = loadedState;
+      _addEventLog('ゲームデータを読み込みました');
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// オートセーブデータを読み込み
+  Future<bool> loadAutoSave() async {
+    final loadedState = await GameSaveService.loadAutoSave();
+    if (loadedState != null) {
+      _gameState = loadedState;
+      _addEventLog('オートセーブデータを読み込みました');
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// セーブファイル一覧を取得
+  Future<List<SaveFileInfo>> getSaveList() async {
+    return await GameSaveService.getSaveList();
+  }
+}
+
+/// 戦闘結果情報
+class BattleResultInfo {
+  const BattleResultInfo({
+    required this.result,
+    required this.sourceProvinceName,
+    required this.targetProvinceName,
+  });
+
+  final AdvancedBattleResult result;
+  final String sourceProvinceName;
+  final String targetProvinceName;
 }

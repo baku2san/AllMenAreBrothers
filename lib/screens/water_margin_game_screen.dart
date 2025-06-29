@@ -6,9 +6,11 @@ import 'package:provider/provider.dart';
 
 import '../controllers/water_margin_game_controller.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../services/game_save_service.dart';
 import '../widgets/game_map_widget.dart';
 import '../widgets/game_info_panel.dart';
 import '../widgets/province_detail_panel.dart';
+import '../widgets/battle_result_dialog.dart';
 import '../core/app_config.dart';
 
 /// 水滸伝戦略ゲームのメイン画面
@@ -57,7 +59,7 @@ class _WaterMarginGameView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.monetization_on, 
+                      Icons.monetization_on,
                       color: AppColors.accentGold,
                       size: 20,
                     ),
@@ -111,6 +113,13 @@ class _WaterMarginGameView extends StatelessWidget {
       ),
       body: Consumer<WaterMarginGameController>(
         builder: (context, controller, child) {
+          // 戦闘結果ダイアログの自動表示
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (controller.lastBattleResult != null) {
+              _showBattleResultDialog(context, controller);
+            }
+          });
+
           return Row(
             children: [
               // メインマップ領域
@@ -130,7 +139,7 @@ class _WaterMarginGameView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
+
                     // 操作ボタン
                     Container(
                       padding: const EdgeInsets.all(8.0),
@@ -143,9 +152,8 @@ class _WaterMarginGameView extends StatelessWidget {
                         child: Row(
                           children: [
                             ElevatedButton.icon(
-                              onPressed: controller.gameState.gameStatus == GameStatus.playing
-                                  ? controller.endTurn
-                                  : null,
+                              onPressed:
+                                  controller.gameState.gameStatus == GameStatus.playing ? controller.endTurn : null,
                               icon: const Icon(Icons.skip_next),
                               label: const Text('ターン終了'),
                               style: ElevatedButton.styleFrom(
@@ -154,20 +162,48 @@ class _WaterMarginGameView extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            TextButton.icon(
-                              onPressed: controller.clearSelection,
-                              icon: const Icon(Icons.clear),
-                              label: const Text('選択解除'),
+                            ElevatedButton.icon(
+                              onPressed: controller.selectedProvince != null &&
+                                      controller.selectedProvince!.controller == Faction.liangshan
+                                  ? () => controller.developProvince(
+                                      controller.selectedProvince!.id, DevelopmentType.agriculture)
+                                  : null,
+                              icon: const Icon(Icons.build),
+                              label: const Text('農業開発'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                            Text(
-                              '総兵力: ${controller.getTotalTroops()}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => _showSaveDialog(context, controller),
+                              icon: const Icon(Icons.save),
+                              label: const Text('セーブ'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                            Text(
-                              '総収入: ${controller.getTotalIncome()}両/ターン',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => _showLoadDialog(context, controller),
+                              icon: const Icon(Icons.folder_open),
+                              label: const Text('ロード'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => controller.initializeGame(),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('新規ゲーム'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ],
                         ),
@@ -176,24 +212,24 @@ class _WaterMarginGameView extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // 右サイドパネル
-              Container(
-                width: 300,
-                decoration: const BoxDecoration(
-                  border: Border(left: BorderSide(color: Colors.grey)),
-                ),
+
+              // サイドバー
+              SizedBox(
+                width: AppConstants.sidebarWidth,
                 child: Column(
                   children: [
                     // ゲーム情報パネル
-                    Expanded(
-                      flex: 1,
+                    Container(
+                      height: 200,
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Colors.grey)),
+                      ),
                       child: GameInfoPanel(
                         gameState: controller.gameState,
                         onEndTurn: controller.endTurn,
                       ),
                     ),
-                    
+
                     // 州詳細パネル
                     Expanded(
                       flex: 2,
@@ -212,7 +248,7 @@ class _WaterMarginGameView extends StatelessWidget {
                               ),
                             ),
                     ),
-                    
+
                     // イベントログ
                     Expanded(
                       flex: 1,
@@ -273,6 +309,164 @@ class _WaterMarginGameView extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// 戦闘結果ダイアログを表示
+  void _showBattleResultDialog(BuildContext context, WaterMarginGameController controller) {
+    final battleResult = controller.lastBattleResult;
+    if (battleResult == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => BattleResultDialog(
+        result: battleResult.result,
+        attackerProvinceName: battleResult.sourceProvinceName,
+        defenderProvinceName: battleResult.targetProvinceName,
+      ),
+    ).then((_) {
+      // ダイアログが閉じられたら戦闘結果をクリア
+      controller.clearBattleResult();
+    });
+  }
+
+  /// セーブダイアログを表示
+  void _showSaveDialog(BuildContext context, WaterMarginGameController controller) {
+    final TextEditingController nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ゲームデータ保存'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('セーブファイル名を入力してください：'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                hintText: '例: セーブデータ1',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final saveName = nameController.text.trim();
+              if (saveName.isNotEmpty) {
+                final success = await controller.saveGame(saveName: saveName);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success ? 'セーブが完了しました' : 'セーブに失敗しました'),
+                      backgroundColor: success ? Colors.green : Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ロードダイアログを表示
+  void _showLoadDialog(BuildContext context, WaterMarginGameController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ゲームデータ読込'),
+        content: SizedBox(
+          width: 300,
+          height: 400,
+          child: FutureBuilder<List<SaveFileInfo>>(
+            future: controller.getSaveList(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return const Center(child: Text('エラーが発生しました'));
+              }
+
+              final saveFiles = snapshot.data ?? [];
+
+              if (saveFiles.isEmpty) {
+                return const Center(child: Text('セーブファイルがありません'));
+              }
+
+              return ListView.builder(
+                itemCount: saveFiles.length,
+                itemBuilder: (context, index) {
+                  final saveFile = saveFiles[index];
+                  return ListTile(
+                    title: Text(saveFile.saveName),
+                    subtitle: Text(saveFile.formattedTime),
+                    trailing: Text('ターン${saveFile.turn}'),
+                    onTap: () async {
+                      final success = await controller.loadGame(saveFile.saveName);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success ? 'ロードが完了しました' : 'ロードに失敗しました'),
+                            backgroundColor: success ? Colors.green : Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await controller.loadAutoSave();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('オートセーブデータをロードしました'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('オートセーブデータがありません'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('オートセーブ'),
+          ),
+        ],
       ),
     );
   }

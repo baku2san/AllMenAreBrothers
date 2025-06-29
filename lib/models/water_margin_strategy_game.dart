@@ -34,6 +34,28 @@ class HeroStats {
 
   /// 内政能力
   int get administrativePower => ((intelligence + charisma) * 0.7 + leadership * 0.3).round();
+
+  /// JSON変換用のtoJsonメソッド
+  Map<String, dynamic> toJson() {
+    return {
+      'force': force,
+      'intelligence': intelligence,
+      'charisma': charisma,
+      'leadership': leadership,
+      'loyalty': loyalty,
+    };
+  }
+
+  /// JSONからのfromJsonファクトリコンストラクタ
+  factory HeroStats.fromJson(Map<String, dynamic> json) {
+    return HeroStats(
+      force: json['force'] ?? 0,
+      intelligence: json['intelligence'] ?? 0,
+      charisma: json['charisma'] ?? 0,
+      leadership: json['leadership'] ?? 0,
+      loyalty: json['loyalty'] ?? 0,
+    );
+  }
 }
 
 /// 英雄の専門技能
@@ -98,6 +120,42 @@ class Hero {
       isRecruited: isRecruited ?? this.isRecruited,
       currentProvinceId: currentProvinceId ?? this.currentProvinceId,
       experience: experience ?? this.experience,
+    );
+  }
+
+  /// JSON変換用のtoJsonメソッド
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'nickname': nickname,
+      'stats': stats.toJson(),
+      'skill': skill.name,
+      'faction': faction.name,
+      'isRecruited': isRecruited,
+      'currentProvinceId': currentProvinceId,
+      'experience': experience,
+    };
+  }
+
+  /// JSONからのfromJsonファクトリコンストラクタ
+  factory Hero.fromJson(Map<String, dynamic> json) {
+    return Hero(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      nickname: json['nickname'] ?? '',
+      stats: HeroStats.fromJson(json['stats'] ?? {}),
+      skill: HeroSkill.values.firstWhere(
+        (e) => e.name == json['skill'],
+        orElse: () => HeroSkill.warrior,
+      ),
+      faction: Faction.values.firstWhere(
+        (e) => e.name == json['faction'],
+        orElse: () => Faction.neutral,
+      ),
+      isRecruited: json['isRecruited'] ?? false,
+      currentProvinceId: json['currentProvinceId'],
+      experience: json['experience'] ?? 0,
     );
   }
 
@@ -181,6 +239,30 @@ class ProvinceState {
 
   /// 兵力上限（人口 x 軍事力）
   int get maxTroops => ((population / 50) * military).round();
+
+  /// JSON変換用のtoJsonメソッド
+  Map<String, dynamic> toJson() {
+    return {
+      'population': population,
+      'agriculture': agriculture,
+      'commerce': commerce,
+      'security': security,
+      'military': military,
+      'loyalty': loyalty,
+    };
+  }
+
+  /// JSONからのfromJsonファクトリコンストラクタ
+  factory ProvinceState.fromJson(Map<String, dynamic> json) {
+    return ProvinceState(
+      population: json['population'] ?? 0,
+      agriculture: json['agriculture'] ?? 0,
+      commerce: json['commerce'] ?? 0,
+      security: json['security'] ?? 0,
+      military: json['military'] ?? 0,
+      loyalty: json['loyalty'] ?? 0,
+    );
+  }
 }
 
 /// 州（Province）
@@ -243,6 +325,45 @@ class Province {
     if (capital) return '👑';
     if (specialFeature != null) return '⭐';
     return '🏙️';
+  }
+
+  /// JSON変換用のtoJsonメソッド
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'position': {'dx': position.dx, 'dy': position.dy},
+      'controller': controller.name,
+      'state': state.toJson(),
+      'currentTroops': currentTroops,
+      'adjacentProvinceIds': adjacentProvinceIds,
+      'capital': capital,
+      'specialFeature': specialFeature,
+      'garrison': garrison,
+    };
+  }
+
+  /// JSONからのfromJsonファクトリコンストラクタ
+  factory Province.fromJson(Map<String, dynamic> json) {
+    final positionMap = json['position'] ?? {'dx': 0.0, 'dy': 0.0};
+    return Province(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      position: Offset(
+        (positionMap['dx'] ?? 0.0).toDouble(),
+        (positionMap['dy'] ?? 0.0).toDouble(),
+      ),
+      controller: Faction.values.firstWhere(
+        (e) => e.name == json['controller'],
+        orElse: () => Faction.neutral,
+      ),
+      state: ProvinceState.fromJson(json['state'] ?? {}),
+      currentTroops: json['currentTroops'] ?? 0,
+      adjacentProvinceIds: List<String>.from(json['adjacentProvinceIds'] ?? []),
+      capital: json['capital'] ?? false,
+      specialFeature: json['specialFeature'],
+      garrison: json['garrison'] ?? 0,
+    );
   }
 }
 
@@ -328,6 +449,57 @@ class WaterMarginGameState {
     } catch (e) {
       return null;
     }
+  }
+
+  /// JSON変換用のtoJsonメソッド
+  Map<String, dynamic> toJson() {
+    return {
+      'provinces': provinces.map((key, value) => MapEntry(key, value.toJson())),
+      'heroes': heroes.map((hero) => hero.toJson()).toList(),
+      'factions': factions.map((key, value) => MapEntry(key, value.name)),
+      'currentTurn': currentTurn,
+      'playerGold': playerGold,
+      'gameStatus': gameStatus.name,
+      'selectedProvinceId': selectedProvinceId,
+      'selectedHeroId': selectedHeroId,
+    };
+  }
+
+  /// JSONからのfromJsonファクトリコンストラクタ
+  factory WaterMarginGameState.fromJson(Map<String, dynamic> json) {
+    final provincesJson = json['provinces'] ?? <String, dynamic>{};
+    final provinces = <String, Province>{};
+
+    for (final entry in provincesJson.entries) {
+      provinces[entry.key] = Province.fromJson(entry.value);
+    }
+
+    final heroesJson = json['heroes'] ?? <dynamic>[];
+    final heroes = heroesJson.map<Hero>((heroJson) => Hero.fromJson(heroJson)).toList();
+
+    final factionsJson = json['factions'] ?? <String, dynamic>{};
+    final factions = <String, Faction>{};
+
+    for (final entry in factionsJson.entries) {
+      factions[entry.key] = Faction.values.firstWhere(
+        (e) => e.name == entry.value,
+        orElse: () => Faction.neutral,
+      );
+    }
+
+    return WaterMarginGameState(
+      provinces: provinces,
+      heroes: heroes,
+      factions: factions,
+      currentTurn: json['currentTurn'] ?? 1,
+      playerGold: json['playerGold'] ?? 1000,
+      gameStatus: GameStatus.values.firstWhere(
+        (e) => e.name == json['gameStatus'],
+        orElse: () => GameStatus.playing,
+      ),
+      selectedProvinceId: json['selectedProvinceId'],
+      selectedHeroId: json['selectedHeroId'],
+    );
   }
 }
 
