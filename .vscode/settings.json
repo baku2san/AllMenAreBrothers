@@ -1,0 +1,128 @@
+{
+  // GitHub Copilot 設定
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": true,
+    "markdown": true,
+    "dart": true,
+    "json": true,
+    "jsonc": true
+  },
+  
+  // Copilot 自動補完設定
+  "github.copilot.editor.enableCodeActions": true,
+  
+  // インライン提案の自動受け入れ設定
+  "editor.inlineSuggest.enabled": true,
+  "editor.inlineSuggest.showToolbar": "always",
+  "editor.inlineSuggest.suppressSuggestions": false,
+  
+  // タブキーでの提案受け入れ
+  "editor.tabCompletion": "on",
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  
+  // Copilot Chat 設定
+  "github.copilot.chat.localeOverride": "ja",
+  
+  // Flutter/Dart 特有の設定
+  "dart.enableSdkFormatter": true,
+  "dart.lineLength": 120,
+  "dart.insertArgumentPlaceholders": false,
+  "dart.showTodos": true,
+  "dart.showSkippedTests": false,
+  
+  // エディター設定
+  "editor.suggestSelection": "first",
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": true,
+    "strings": true
+  },
+  "editor.quickSuggestionsDelay": 0,
+  "editor.wordBasedSuggestions": "matchingDocuments",
+  "editor.parameterHints.enabled": true,
+  "editor.suggestOnTriggerCharacters": true,
+  
+  // コード補完の詳細設定
+  "editor.suggest.insertMode": "replace",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.suggest.localityBonus": true,
+  "editor.suggest.shareSuggestSelections": true,
+  
+  // Copilot 高度な設定
+  "github.copilot.advanced": {
+    "secret_key": "github_copilot_telemetry",
+    "length": 500,
+    "temperature": 0.1,
+    "top_p": 1,
+    "stop": ["\n\n", "\n\r\n", "\r\n\r\n"],
+    "indentationMode": {
+      "python": "spaces",
+      "dart": "spaces",
+      "javascript": "spaces",
+      "typescript": "spaces"
+    }
+  },
+  
+  // ファイル自動保存とフォーマット
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  
+  // Dartの自動インポート
+  "dart.autoImportCompletions": true,
+  "dart.includeDependenciesInWorkspaceSymbols": true,
+  
+  // エラーと警告の表示
+  "problems.decorations.enabled": true,
+  "dart.showInspectorNotificationsForWidgetErrors": true,
+  
+  // ブラケットペアの色分け
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  
+  // ミニマップとナビゲーション
+  "editor.minimap.enabled": true,
+  "editor.minimap.scale": 1,
+  "breadcrumbs.enabled": true,
+  
+  // Git 統合
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  
+  // ファイルエクスプローラー
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  
+  // 水滸伝ゲーム開発専用設定
+  "files.associations": {
+    "*.dart": "dart"
+  },
+  
+  // 除外ファイル設定
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/build": true,
+    "**/.dart_tool": true,
+    "**/android/.gradle": true,
+    "**/android/app/build": true,
+    "**/ios/Pods": true,
+    "**/ios/.symlinks": true,
+    "**/ios/Runner.xcworkspace": true
+  },
+  
+  // 検索除外設定
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/build": true,
+    "**/.dart_tool": true
+  }
+}

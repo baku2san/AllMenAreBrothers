@@ -1,0 +1,36 @@
+{
+  "recommendations": [
+    // GitHub Copilot関連
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // Flutter/Dart開発必須
+    "dart-code.dart-code",
+    "dart-code.flutter",
+    
+    // 開発効率向上
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    
+    // Git関連
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    
+    // UI/UX強化
+    "pkief.material-icon-theme",
+    "github.github-vscode-theme",
+    
+    // その他便利ツール
+    "ms-vscode.vscode-typescript-next",
+    "gruntfuggly.todo-tree",
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight",
+    
+    // 水滸伝ゲーム開発に有用
+    "alefragnani.bookmarks",
+    "ms-vscode.references-view",
+    "christian-kohler.path-intellisense"
+  ]
+}

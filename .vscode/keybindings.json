@@ -1,0 +1,95 @@
+[
+  // Copilot関連のキーボードショートカット
+  {
+    "key": "ctrl+shift+a",
+    "command": "github.copilot.generate",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "ctrl+shift+c",
+    "command": "github.copilot.chat.view.chat.focus",
+    "when": "github.copilot.chat.enabled"
+  },
+  {
+    "key": "ctrl+shift+i",
+    "command": "github.copilot.chat.insertIntoEditor",
+    "when": "github.copilot.chat.enabled && inputFocus"
+  },
+  {
+    "key": "alt+\\",
+    "command": "github.copilot.triggerInlineCompletion",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "tab",
+    "command": "github.copilot.acceptInlineCompletion",
+    "when": "inlineSuggestionVisible && !editorTabMovesFocus"
+  },
+  {
+    "key": "ctrl+right",
+    "command": "github.copilot.acceptNextWord",
+    "when": "inlineSuggestionVisible && !editorTabMovesFocus"
+  },
+  {
+    "key": "escape",
+    "command": "github.copilot.dismissInlineCompletion",
+    "when": "inlineSuggestionVisible"
+  },
+  
+  // Flutter/Dart関連ショートカット
+  {
+    "key": "ctrl+f5",
+    "command": "flutter.run"
+  },
+  {
+    "key": "ctrl+shift+f5",
+    "command": "flutter.hotReload"
+  },
+  {
+    "key": "ctrl+alt+f5",
+    "command": "flutter.hotRestart"
+  },
+  {
+    "key": "ctrl+shift+p",
+    "command": "dart.showTypeHierarchy",
+    "when": "editorTextFocus && editorLangId == dart"
+  },
+  
+  // 水滸伝ゲーム開発用ショートカット
+  {
+    "key": "ctrl+alt+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Flutter: Run"
+  },
+  {
+    "key": "ctrl+alt+d",
+    "command": "flutter.doctor"
+  },
+  
+  // エディター操作の強化
+  {
+    "key": "ctrl+d",
+    "command": "editor.action.addSelectionToNextFindMatch",
+    "when": "editorFocus"
+  },
+  {
+    "key": "alt+up",
+    "command": "editor.action.moveLinesUpAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "alt+down",
+    "command": "editor.action.moveLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "shift+alt+down",
+    "command": "editor.action.copyLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "shift+alt+up",
+    "command": "editor.action.copyLinesUpAction",
+    "when": "editorTextFocus && !editorReadonly"
+  }
+]
