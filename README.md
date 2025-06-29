@@ -5,9 +5,19 @@
 
 ## 🎮 プレイ
 
-**[今すぐプレイ（GitHub Pages）](https://yourusername.github.io/AllMenAreBrothers/)**
+### 🌐 オンラインでプレイ
 
-> **注意**: GitHub Pagesでのプレイには、モダンなWebブラウザ（Chrome、Firefox、Safari、Edge）が必要です。
+[![Play Now](https://img.shields.io/badge/🎮_Play_Now-水滸伝戦略ゲーム-2E7D32?style=for-the-badge&logo=flutter)](https://baku2san.github.io/AllMenAreBrothers/)
+
+### 📱 モバイル・デスクトップ対応
+- **Web版**: 上記リンクからブラウザで即座にプレイ
+
+### ⚙️ 動作環境
+- **推奨ブラウザ**: Chrome, Firefox, Safari, Edge（最新版）
+- **必要環境**: モダンWebブラウザ、JavaScript有効
+- **画面サイズ**: デスクトップ、タブレット、スマートフォン対応
+
+> 💡 **ヒント**: デスクトップでの操作が最も快適です。モバイルでは横画面表示を推奨します。
 
 ## ゲーム概要
 
@@ -25,9 +35,11 @@
 ## 技術仕様
 
 ### 開発環境
+
 - **フレームワーク**: Flutter 3.6+
 - **言語**: Dart
-- **対応プラットフォーム**: Android, iOS, Windows, macOS, Linux, Web
+- **対応プラットフォーム**: Web, Android, iOS
+- **自動デプロイ**: GitHub Actions → GitHub Pages
 
 ### プロジェクト構成
 ```
@@ -54,11 +66,22 @@ lib/
 ```
 
 ### 新機能・改善点（v1.0.0）
+
 - ✅ **GitHub Actions CI/CD**: 自動ビルド・デプロイ
 - ✅ **新しいアイコンデザイン**: 中国古典風のSVGアイコン
 - ✅ **統一されたテーマ**: `app_config.dart`によるカラーパレット・テーマ管理
 - ✅ **コードリファクタリング**: null安全性、型安全性の向上
 - ✅ **PWA対応**: プログレッシブWebアプリとして動作
+- ✅ **プラットフォーム最適化**: Web/Android/iOS に特化
+
+### 🚀 デプロイメント
+
+このプロジェクトは **GitHub Actions** による自動CI/CDパイプラインを構築しています：
+
+1. **mainブランチへのpush** → 自動ビルド → GitHub Pagesへデプロイ
+2. **タグリリース** → 自動リリースノート生成
+3. **Web最適化ビルド** → 高速ロード・PWA対応
+
 
 ## 開発・実行方法
 
@@ -103,11 +126,30 @@ flutter build apk
 - ⏳ マルチプレイヤー対応
 - ⏳ カスタムシナリオ
 
+## 📊 プロジェクト情報
+
+[![Flutter](https://img.shields.io/badge/Flutter-3.6+-02569B?style=flat&logo=flutter)](https://flutter.dev)
+[![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Live-success?style=flat&logo=github)](https://iori.github.io/AllMenAreBrothers/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Auto Deploy](https://img.shields.io/badge/Auto_Deploy-GitHub_Actions-2088FF?style=flat&logo=github-actions)](https://github.com/iori/AllMenAreBrothers/actions)
+
 ## ライセンス
 
 このプロジェクトはMITライセンスの下で公開されています。
 
-## 貢献
+## 🤝 貢献・フィードバック
 
-バグ報告や機能提案は、GitHubのIssuesでお願いします。
-プルリクエストも歓迎します。
+- **バグ報告**: [GitHub Issues](https://github.com/iori/AllMenAreBrothers/issues)
+- **機能提案**: [GitHub Discussions](https://github.com/iori/AllMenAreBrothers/discussions)
+- **プルリクエスト**: コード改善やバグ修正のPRを歓迎します
+- **ゲームプレイ**: [実際にプレイ](https://iori.github.io/AllMenAreBrothers/)してフィードバックをお願いします！
+
+---
+
+<div align="center">
+
+**🎮 [今すぐプレイ](https://iori.github.io/AllMenAreBrothers/) | 📖 [開発ドキュメント](docs/) | 🐛 [バグ報告](https://github.com/iori/AllMenAreBrothers/issues)**
+
+**北宋時代の梁山泊で、あなたの天下統一の物語を始めましょう！**
+
+</div>
