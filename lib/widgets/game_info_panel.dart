@@ -26,27 +26,28 @@ class GameInfoPanel extends StatelessWidget {
           bottom: BorderSide(color: Colors.grey.shade300),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ゲームタイトル
-          const Text(
-            '梁山泊情勢',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ゲームタイトル
+            const Text(
+              '梁山泊情勢',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // ターン情報
-          _buildInfoRow('ターン', '${gameState.currentTurn}'),
-          _buildInfoRow('軍資金', '${gameState.playerGold} 貫'),
-          _buildInfoRow('支配州', '${gameState.playerProvinceCount} 州'),
-          _buildInfoRow('総兵力', '${gameState.playerTotalTroops} 人'),
-          _buildInfoRow('仲間', '${gameState.recruitedHeroCount} 人'),
+            
+            const SizedBox(height: 12),
+            
+            // ターン情報
+            _buildInfoRow('ターン', '${gameState.currentTurn}'),
+            _buildInfoRow('軍資金', '${gameState.playerGold} 貫'),
+            _buildInfoRow('支配州', '${gameState.playerProvinceCount} 州'),
+            _buildInfoRow('総兵力', '${gameState.playerTotalTroops} 人'),
+            _buildInfoRow('仲間', '${gameState.recruitedHeroCount} 人'),
           
           const SizedBox(height: 16),
           
@@ -88,6 +89,7 @@ class GameInfoPanel extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

@@ -138,36 +138,39 @@ class _WaterMarginGameView extends StatelessWidget {
                         color: Colors.grey[200],
                         border: const Border(top: BorderSide(color: Colors.grey)),
                       ),
-                      child: Row(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: controller.gameState.gameStatus == GameStatus.playing
-                                ? controller.endTurn
-                                : null,
-                            icon: const Icon(Icons.skip_next),
-                            label: const Text('ターン終了'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: controller.gameState.gameStatus == GameStatus.playing
+                                  ? controller.endTurn
+                                  : null,
+                              icon: const Icon(Icons.skip_next),
+                              label: const Text('ターン終了'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          TextButton.icon(
-                            onPressed: controller.clearSelection,
-                            icon: const Icon(Icons.clear),
-                            label: const Text('選択解除'),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '総兵力: ${controller.getTotalTroops()}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            '総収入: ${controller.getTotalIncome()}両/ターン',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: controller.clearSelection,
+                              icon: const Icon(Icons.clear),
+                              label: const Text('選択解除'),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              '総兵力: ${controller.getTotalTroops()}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              '総収入: ${controller.getTotalIncome()}両/ターン',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
