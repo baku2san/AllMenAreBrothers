@@ -41,7 +41,7 @@ class _WaterMarginGameView extends StatelessWidget {
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 4,
-        shadowColor: AppColors.darkGreen.withOpacity(0.5),
+        shadowColor: AppColors.darkGreen.withValues(alpha: 0.5),
         actions: [
           Consumer<WaterMarginGameController>(
             builder: (context, controller, child) {
@@ -49,7 +49,7 @@ class _WaterMarginGameView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.accentGold.withOpacity(0.2),
+                  color: AppColors.accentGold.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.accentGold, width: 1),
                 ),
@@ -81,7 +81,7 @@ class _WaterMarginGameView extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.2),
+                  color: AppColors.info.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.info, width: 1),
                 ),

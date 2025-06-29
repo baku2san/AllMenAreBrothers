@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.6.0
+  sdk: '>=3.5.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # State management
-  provider: ^6.1.1
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
@@ -50,7 +50,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   
   # Icon generation
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -91,22 +91,22 @@ flutter:
   #         weight: 700
   #
   
-# Flutter Launcher Icons configuration (SVGからPNGに変換後に使用)
-# flutter_launcher_icons:
-#   android: "ic_launcher"
-#   ios: true
-#   web:
-#     generate: true
-#     background_color: "#2E7D32"
-#     theme_color: "#2E7D32"
-#   
-#   # Use the SVG as the source (we'll convert to PNG first)
-#   image_path: "assets/icons/icon-512.png"
-#   adaptive_icon_background: "#2E7D32"
-#   adaptive_icon_foreground: "assets/icons/icon-foreground.png"
-#   
-#   # Platform specific customization
-#   min_sdk_android: 21
-#   remove_alpha_ios: true
+# Flutter Launcher Icons configuration
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  web:
+    generate: true
+    background_color: "#2E7D32"
+    theme_color: "#2E7D32"
+  
+  # Use the SVG as the source (we'll convert to PNG first)
+  image_path: "assets/icons/icon-512.png"
+  adaptive_icon_background: "#2E7D32"
+  adaptive_icon_foreground: "assets/icons/icon-foreground.png"
+  
+  # Platform specific customization
+  min_sdk_android: 21
+  remove_alpha_ios: true
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

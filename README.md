@@ -36,10 +36,19 @@
 
 ### 開発環境
 
-- **フレームワーク**: Flutter 3.6+
-- **言語**: Dart
+- **フレームワーク**: Flutter 3.24+
+- **言語**: Dart 3.5+
 - **対応プラットフォーム**: Web, Android, iOS
 - **自動デプロイ**: GitHub Actions → GitHub Pages
+- **依存ライブラリ**: provider 6.1.2+, flutter_launcher_icons 0.14.4+
+
+### 最新のアップデート
+
+- ✅ Dart 3.5+対応（null安全化完了）
+- ✅ 非推奨API修正（withOpacity → withValues）
+- ✅ 依存ライブラリ最新化
+- ✅ SVGアイコン生成システム
+- ✅ GitHub Actions CI/CD
 
 ### プロジェクト構成
 ```
