@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4CAF50"/>
+      <stop offset="100%" stop-color="#2E7D32"/>
+    </radialGradient>
+    <linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8D6E63"/>
+      <stop offset="100%" stop-color="#5D4037"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景円 -->
+  <circle cx="256" cy="256" r="252" fill="url(#bg)" stroke="#1B5E20" stroke-width="4"/>
+  
+  <!-- 梁山（山） -->
+  <path d="M76.8 384.0 L153.6 204.8 L256.0 256.0 L358.4 204.8 L435.2 384.0 Z" 
+        fill="url(#mountain)" stroke="#3E2723" stroke-width="2"/>
+  
+  <!-- 湖水 -->
+  <ellipse cx="256.0" cy="399.36" rx="153.6" ry="51.2" 
+           fill="#1976D2" stroke="#0D47A1" stroke-width="2"/>
+  
+  <!-- 城塞 -->
+  <rect x="230.4" y="204.8" width="51.2" height="102.4" 
+        fill="#8D6E63" stroke="#3E2723" stroke-width="2"/>
+  
+  <!-- 旗 -->
+  <line x1="281.6" y1="128.0" x2="281.6" y2="230.4" 
+        stroke="#3E2723" stroke-width="3"/>
+  <path d="M281.6 128.0 L384.0 153.6 L281.6 194.56 Z" 
+        fill="#F44336" stroke="#B71C1C" stroke-width="1"/>
+  
+  <!-- 中央のシンボル -->
+  <circle cx="256.0" cy="256.0" r="30.72" 
+          fill="#FFD700" stroke="#FF8F00" stroke-width="2"/>
+  <text x="256.0" y="266.24" text-anchor="middle" 
+        font-family="serif" font-size="25.6" font-weight="bold" fill="#8D6E63">忠</text>
+</svg>

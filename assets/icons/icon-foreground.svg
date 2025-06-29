@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432">
+  <defs>
+    <linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8D6E63"/>
+      <stop offset="100%" stop-color="#5D4037"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 梁山（山） - 中央配置 -->
+  <path d="M108.0 302.4 L151.2 194.4 L216.0 237.60000000000002 L280.8 194.4 L324.0 302.4 Z" 
+        fill="url(#mountain)" stroke="#3E2723" stroke-width="3"/>
+  
+  <!-- 城塞 -->
+  <rect x="203.04" y="194.4" width="25.919999999999998" height="64.8" 
+        fill="#8D6E63" stroke="#3E2723" stroke-width="2"/>
+  
+  <!-- 旗 -->
+  <line x1="228.96" y1="151.2" x2="228.96" y2="216.0" 
+        stroke="#3E2723" stroke-width="3"/>
+  <path d="M228.96 151.2 L293.76000000000005 172.8 L228.96 203.04 Z" 
+        fill="#F44336" stroke="#B71C1C" stroke-width="1"/>
+  
+  <!-- シンボル -->
+  <circle cx="216.0" cy="224.64000000000001" r="21.6" 
+          fill="#FFD700" stroke="#FF8F00" stroke-width="2"/>
+  <text x="216.0" y="235.44000000000003" text-anchor="middle" 
+        font-family="serif" font-size="17.28" font-weight="bold" fill="#8D6E63">忠</text>
+</svg>
