@@ -16,12 +16,18 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'  # より柔軟なバージョン指定
+          flutter-version: '3.27.x'  # withValuesメソッド対応のため最新バージョン
           channel: 'stable'
           cache: true
 
+      - name: Verify Flutter installation
+        run: flutter --version
+
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Analyze project source
+        run: flutter analyze --fatal-infos
 
       - name: Run tests
         run: flutter test
@@ -53,7 +59,7 @@ jobs:
             - パフォーマンス改善
             
             ### 🛠️ 技術仕様
-            - **Flutter**: 3.24.0
+            - **Flutter**: 3.27.0
             - **ビルド日時**: ${{ github.event.head_commit.timestamp }}
             - **コミット**: ${{ github.sha }}
           draft: false
