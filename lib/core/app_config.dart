@@ -36,73 +36,175 @@ class AppConstants {
 class AppColors {
   AppColors._();
 
-  /// 基本カラー（梁山泊をイメージした緑系）
-  static const Color primaryGreen = Color(0xFF2E7D32);
-  static const Color lightGreen = Color(0xFF66BB6A);
-  static const Color darkGreen = Color(0xFF1B5E20);
+  /// 基本カラーパレット（Material Design 3準拠）
+  static const Color primary = Color(0xFF1B5E20);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color primaryContainer = Color(0xFFA7F3A1);
+  static const Color onPrimaryContainer = Color(0xFF002106);
 
-  /// アクセントカラー（中国古典の金系）
-  static const Color accentGold = Color(0xFFFFB300);
-  static const Color lightGold = Color(0xFFFFC947);
-  static const Color darkGold = Color(0xFFFF8F00);
+  static const Color secondary = Color(0xFFFF8F00);
+  static const Color onSecondary = Color(0xFFFFFFFF);
+  static const Color secondaryContainer = Color(0xFFFFE0A3);
+  static const Color onSecondaryContainer = Color(0xFF3D2F00);
 
-  /// 勢力カラー
-  static const Color liangshan = primaryGreen;
-  static const Color imperial = Color(0xFF7B1FA2);
+  static const Color tertiary = Color(0xFF2196F3);
+  static const Color onTertiary = Color(0xFFFFFFFF);
+  static const Color tertiaryContainer = Color(0xFFBBDEFB);
+  static const Color onTertiaryContainer = Color(0xFF0D47A1);
+
+  /// 表面色
+  static const Color surface = Color(0xFFFFFBFF);
+  static const Color onSurface = Color(0xFF1C1B1F);
+  static const Color surfaceVariant = Color(0xFFE7E0EC);
+  static const Color onSurfaceVariant = Color(0xFF49454F);
+  static const Color surfaceLight = Color(0xFFF5F5F5);
+
+  /// エラー・警告色
+  static const Color error = Color(0xFFBA1A1A);
+  static const Color onError = Color(0xFFFFFFFF);
+  static const Color errorContainer = Color(0xFFFFDAD6);
+  static const Color onErrorContainer = Color(0xFF410002);
+
+  static const Color warning = Color(0xFFE65100);
+  static const Color success = Color(0xFF2E7D32);
+  static const Color info = Color(0xFF1976D2);
+
+  /// 勢力カラー（より鮮やかで識別しやすく）
+  static const Color liangshan = Color(0xFF1B5E20);
+  static const Color imperial = Color(0xFF6A1B9A);
   static const Color warlord = Color(0xFFD32F2F);
   static const Color bandit = Color(0xFF5D4037);
-  static const Color neutral = Color(0xFF616161);
+  static const Color neutral = Color(0xFF757575);
 
-  /// ステータスカラー
-  static const Color success = Color(0xFF4CAF50);
-  static const Color warning = Color(0xFFFF9800);
-  static const Color error = Color(0xFFE91E63);
-  static const Color info = Color(0xFF2196F3);
+  /// アクセントカラー
+  static const Color accentGold = Color(0xFFFFB300);
+  static const Color darkGreen = Color(0xFF0A3D0C);
+  static const Color lightGreen = Color(0xFF81C784);
 
-  /// 背景・表面色
-  static const Color backgroundLight = Color(0xFFF5F5F5);
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color onSurfaceLight = Color(0xFF212121);
+  /// レガシーサポート（後方互換性）
+  static const Color primaryGreen = primary;
 }
 
-/// テキストスタイル
+/// モダンなテキストスタイル
 class AppTextStyles {
   AppTextStyles._();
 
-  /// ヘッダーテキスト
-  static const TextStyle header = TextStyle(
+  /// Display スタイル
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 57,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.25,
+    height: 1.12,
+  );
+
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 45,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+    height: 1.16,
+  );
+
+  static const TextStyle displaySmall = TextStyle(
+    fontSize: 36,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+    height: 1.22,
+  );
+
+  /// Headline スタイル
+  static const TextStyle headlineLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.25,
+  );
+
+  static const TextStyle headlineMedium = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    height: 1.29,
+  );
+
+  static const TextStyle headlineSmall = TextStyle(
     fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: AppColors.primaryGreen,
-  );
-
-  /// サブヘッダーテキスト
-  static const TextStyle subHeader = TextStyle(
-    fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AppColors.darkGreen,
+    letterSpacing: 0,
+    height: 1.33,
   );
 
-  /// 本文テキスト
-  static const TextStyle body = TextStyle(
+  /// Title スタイル
+  static const TextStyle titleLarge = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0,
+    height: 1.27,
+  );
+
+  static const TextStyle titleMedium = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.15,
+    height: 1.5,
+  );
+
+  static const TextStyle titleSmall = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.normal,
-    color: AppColors.onSurfaceLight,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+    height: 1.43,
   );
 
-  /// キャプションテキスト
-  static const TextStyle caption = TextStyle(
+  /// Body スタイル
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.5,
+    height: 1.5,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.25,
+    height: 1.43,
+  );
+
+  static const TextStyle bodySmall = TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.normal,
-    color: Colors.grey,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.4,
+    height: 1.33,
   );
 
-  /// ボタンテキスト
-  static const TextStyle button = TextStyle(
+  /// Label スタイル
+  static const TextStyle labelLarge = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+    height: 1.43,
   );
+
+  static const TextStyle labelMedium = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    height: 1.33,
+  );
+
+  static const TextStyle labelSmall = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    height: 1.45,
+  );
+
+  /// レガシーサポート
+  static const TextStyle header = headlineMedium;
+  static const TextStyle subHeader = titleLarge;
+  static const TextStyle body = bodyMedium;
+  static const TextStyle caption = bodySmall;
+  static const TextStyle button = labelLarge;
 }
 
 /// アプリテーマ

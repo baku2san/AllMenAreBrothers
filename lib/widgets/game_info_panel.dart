@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../core/app_config.dart';
 
 /// ゲーム情報パネル
 class GameInfoPanel extends StatelessWidget {
@@ -18,102 +19,156 @@ class GameInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
-        ),
-      ),
+      padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ゲームタイトル
-            const Text(
-              '梁山泊情勢',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.castle_rounded,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '梁山泊情勢',
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            
-            const SizedBox(height: 12),
-            
+
+            const SizedBox(height: 16),
+
             // ターン情報
-            _buildInfoRow('ターン', '${gameState.currentTurn}'),
-            _buildInfoRow('軍資金', '${gameState.playerGold} 貫'),
-            _buildInfoRow('支配州', '${gameState.playerProvinceCount} 州'),
-            _buildInfoRow('総兵力', '${gameState.playerTotalTroops} 人'),
-            _buildInfoRow('仲間', '${gameState.recruitedHeroCount} 人'),
-          
-          const SizedBox(height: 16),
-          
-          // ターン終了ボタン
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onEndTurn,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: const Text(
-                'ターン終了',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+            _buildInfoCard(context, [
+              _buildInfoRow('ターン', '${gameState.currentTurn}', Icons.calendar_today_rounded, colorScheme),
+              _buildInfoRow('軍資金', '${gameState.playerGold} 両', Icons.monetization_on_rounded, colorScheme),
+              _buildInfoRow('支配州', '${gameState.playerProvinceCount} 州', Icons.location_city_rounded, colorScheme),
+              _buildInfoRow('総兵力', '${gameState.playerTotalTroops} 人', Icons.groups_rounded, colorScheme),
+              _buildInfoRow('仲間', '${gameState.recruitedHeroCount} 人', Icons.person_rounded, colorScheme),
+            ]),
+
+            const SizedBox(height: 16),
+
+            // ターン終了ボタン
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onEndTurn,
+                icon: const Icon(Icons.navigate_next_rounded),
+                label: Text(
+                  'ターン終了',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                 ),
               ),
             ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // ゲーム状況の簡易表示
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              _getGameStatusMessage(),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.blue.shade700,
+
+            const SizedBox(height: 12),
+
+            // ゲーム状況の簡易表示
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                border: Border.all(
+                  color: colorScheme.tertiary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: colorScheme.onTertiaryContainer,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _getGameStatusMessage(),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: colorScheme.onTertiaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
   }
 
+  /// 情報カードを構築
+  Widget _buildInfoCard(BuildContext context, List<Widget> children) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
   /// 情報行を構築
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, IconData icon, ColorScheme colorScheme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
+          Icon(
+            icon,
+            color: colorScheme.primary,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
+            style: AppTextStyles.labelLarge.copyWith(
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
             ),
           ),
         ],
@@ -126,7 +181,7 @@ class GameInfoPanel extends StatelessWidget {
     final provinceCount = gameState.playerProvinceCount;
     final totalProvinces = gameState.provinces.length;
     final progress = (provinceCount / totalProvinces * 100).round();
-    
+
     if (progress < 20) {
       return '梁山泊はまだ小さな勢力です。周辺州の攻略を目指しましょう。';
     } else if (progress < 50) {

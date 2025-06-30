@@ -9,6 +9,7 @@ import '../controllers/water_margin_game_controller.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../services/game_save_service.dart';
 import '../core/app_config.dart';
+import '../core/app_theme.dart';
 import '../screens/diplomacy_screen.dart';
 import '../screens/hero_management_screen.dart';
 
@@ -18,109 +19,132 @@ class GameCommandBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Consumer<WaterMarginGameController>(
       builder: (context, controller, child) {
         final selectedProvince = controller.selectedProvince;
 
         return Container(
-          height: 120, // 2行のボタンを配置
-          padding: const EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            border: const Border(top: BorderSide(color: Colors.grey)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // 第1行: 基本コマンド
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildCommandButton(
-                        context: context,
-                        label: 'ターン終了',
-                        icon: Icons.skip_next,
-                        color: Colors.green,
-                        onPressed: controller.gameState.gameStatus == GameStatus.playing ? controller.endTurn : null,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCommandButton(
-                        context: context,
-                        label: '外交',
-                        icon: Icons.handshake,
-                        color: Colors.purple,
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => DiplomacyScreen(controller: controller),
+          margin: ModernSpacing.paddingMD,
+          decoration: ModernDecorations.elevatedCard(colorScheme),
+          child: Padding(
+            padding: ModernSpacing.paddingMD,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 第1行: 基本コマンド
+                SizedBox(
+                  height: 56,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildModernCommandButton(
+                          context: context,
+                          label: 'ターン終了',
+                          icon: Icons.skip_next_rounded,
+                          isPrimary: true,
+                          onPressed: controller.gameState.gameStatus == GameStatus.playing 
+                              ? controller.endTurn 
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildModernCommandButton(
+                          context: context,
+                          label: '外交',
+                          icon: Icons.handshake_rounded,
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => DiplomacyScreen(controller: controller),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCommandButton(
-                        context: context,
-                        label: '英雄管理',
-                        icon: Icons.group,
-                        color: Colors.indigo,
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => HeroManagementScreen(controller: controller),
+                        const SizedBox(width: 8),
+                        _buildModernCommandButton(
+                          context: context,
+                          label: '英雄管理',
+                          icon: Icons.group_rounded,
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => HeroManagementScreen(controller: controller),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCommandButton(
-                        context: context,
-                        label: 'セーブ',
-                        icon: Icons.save,
-                        color: Colors.orange,
-                        onPressed: () => _showSaveDialog(context, controller),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCommandButton(
-                        context: context,
-                        label: 'ロード',
-                        icon: Icons.folder_open,
-                        color: Colors.teal,
-                        onPressed: () => _showLoadDialog(context, controller),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCommandButton(
-                        context: context,
-                        label: '新規ゲーム',
-                        icon: Icons.refresh,
-                        color: Colors.red,
-                        onPressed: () => controller.initializeGame(),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        _buildModernCommandButton(
+                          context: context,
+                          label: 'セーブ',
+                          icon: Icons.save_rounded,
+                          onPressed: () => _showSaveDialog(context, controller),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildModernCommandButton(
+                          context: context,
+                          label: 'ロード',
+                          icon: Icons.folder_open_rounded,
+                          onPressed: () => _showLoadDialog(context, controller),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 4),
+                // 第2行: 州コマンド（選択時のみ表示）
+                if (selectedProvince != null) ...[
+                  const SizedBox(height: 8),
+                  Divider(color: colorScheme.outline.withValues(alpha: 0.3)),
+                  const SizedBox(height: 8),
+                  _buildModernProvinceCommands(context, controller, selectedProvince),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+                          context: context,
+                          label: '新規ゲーム',
+                          icon: Icons.refresh_rounded,
+                          isDestructive: true,
+                          onPressed: () => controller.initializeGame(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-              // 第2行: 州関連コマンド
-              Expanded(
-                child: selectedProvince != null
-                    ? _buildProvinceCommands(context, controller, selectedProvince)
-                    : const Center(
-                        child: Text(
-                          '州を選択してください',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                const SizedBox(height: 8),
+
+                // 第2行: 州関連コマンド
+                SizedBox(
+                  height: 56,
+                  child: selectedProvince != null
+                      ? _buildModernProvinceCommands(context, controller, selectedProvince)
+                      : Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.touch_app_rounded,
+                                color: colorScheme.outline,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '州を選択してください',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },
