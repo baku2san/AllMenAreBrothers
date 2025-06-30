@@ -131,14 +131,40 @@ class _WaterMarginGameView extends StatelessWidget {
                   children: [
                     // マップ
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.brown),
-                        ),
-                        child: GameMapWidget(
-                          gameState: controller.gameState,
-                          onProvinceSelected: controller.selectProvince,
-                        ),
+                      child: Column(
+                        children: [
+                          // マップ表示
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.brown),
+                              ),
+                              child: GameMapWidget(
+                                gameState: controller.gameState,
+                                onProvinceSelected: controller.selectProvince,
+                              ),
+                            ),
+                          ),
+
+                          // マップ凡例
+                          if (controller.selectedProvince != null)
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                border: const Border(top: BorderSide(color: Colors.grey)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildLegendItem('選択中', Colors.yellow, Icons.location_on),
+                                  _buildLegendItem('隣接州', Colors.blue, Icons.link),
+                                  _buildLegendItem('攻撃可能', Colors.red, Icons.gps_fixed),
+                                  _buildLegendItem('味方州', AppColors.primaryGreen, Icons.flag),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ),
 
@@ -341,6 +367,37 @@ class _WaterMarginGameView extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  /// 凡例アイテムを構築
+  Widget _buildLegendItem(String label, Color color, IconData icon) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.7),
+            border: Border.all(color: color.withValues(alpha: 0.9)),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            icon,
+            size: 12,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

@@ -437,9 +437,24 @@ class WaterMarginGameController extends ChangeNotifier {
     final sourceProvince = selectedProvince;
     final targetProvince = _gameState.provinces[targetProvinceId];
 
-    if (sourceProvince == null || targetProvince == null) return;
-    if (sourceProvince.controller != Faction.liangshan) return;
-    if (targetProvince.controller == Faction.liangshan) return;
+    if (sourceProvince == null || targetProvince == null) {
+      _addEventLog('攻撃失敗: 州が選択されていません');
+      return;
+    }
+    if (sourceProvince.controller != Faction.liangshan) {
+      _addEventLog('攻撃失敗: ${sourceProvince.name}は梁山泊の州ではありません');
+      return;
+    }
+    if (targetProvince.controller == Faction.liangshan) {
+      _addEventLog('攻撃失敗: ${targetProvince.name}は味方の州です');
+      return;
+    }
+    if (sourceProvince.currentTroops <= 0) {
+      _addEventLog('攻撃失敗: ${sourceProvince.name}に兵力がありません');
+      return;
+    }
+
+    _addEventLog('${sourceProvince.name}から${targetProvince.name}への攻撃を開始！');
 
     // 高度な戦闘システムを使用
     final attacker = BattleParticipant(
@@ -463,6 +478,9 @@ class WaterMarginGameController extends ChangeNotifier {
       battleType: BattleType.fieldBattle,
       terrain: BattleTerrain.plains,
     );
+
+    _addEventLog('戦闘結果: ${battleResult.attackerWins ? "勝利" : "敗北"}');
+    _addEventLog('味方損失: ${battleResult.attackerLosses}, 敵損失: ${battleResult.defenderLosses}');
 
     // 戦闘結果を反映
     _applyBattleResult(battleResult, sourceProvince.id, targetProvince.id);

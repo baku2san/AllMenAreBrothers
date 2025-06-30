@@ -170,8 +170,25 @@ class ProvinceDetailPanel extends StatelessWidget {
               _buildActionButton(
                 '攻撃',
                 Icons.gps_fixed,
-                () => _showAttackDialog(context),
+                _canAttackProvince() ? () => _showAttackDialog(context) : null,
+                tooltip: _canAttackProvince() ? null : '隣接する味方の州がありません',
               ),
+
+              // 攻撃可能状況の説明
+              if (!_canAttackProvince())
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    _getAttackStatusMessage(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
               _buildActionButton(
                 '交渉',
                 Icons.handshake,
@@ -257,18 +274,28 @@ class ProvinceDetailPanel extends StatelessWidget {
   }
 
   /// 行動ボタンを構築
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onPressed) {
+  Widget _buildActionButton(
+    String label,
+    IconData icon,
+    VoidCallback? onPressed, {
+    String? tooltip,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: SizedBox(
         width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: onPressed,
-          icon: Icon(icon, size: 16),
-          label: Text(label),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            textStyle: const TextStyle(fontSize: 12),
+        child: Tooltip(
+          message: tooltip ?? '',
+          child: ElevatedButton.icon(
+            onPressed: onPressed,
+            icon: Icon(icon, size: 16),
+            label: Text(label),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              textStyle: const TextStyle(fontSize: 12),
+              backgroundColor: onPressed != null ? null : Colors.grey.shade300,
+              foregroundColor: onPressed != null ? null : Colors.grey.shade500,
+            ),
           ),
         ),
       ),
@@ -472,12 +499,25 @@ class ProvinceDetailPanel extends StatelessWidget {
 
   /// 攻撃ダイアログを表示
   void _showAttackDialog(BuildContext context) {
-    // プレイヤーが隣接州を持っているかチェック
+    // プレイヤーの隣接州を取得
     final playerProvinces = controller.getPlayerProvinces();
-    if (playerProvinces.isEmpty) {
-      _showSimpleDialog(context, '攻撃', 'プレイヤーの州がありません');
+    final adjacentPlayerProvinces = playerProvinces.where((p) => p.adjacentProvinceIds.contains(province.id)).toList();
+
+    if (adjacentPlayerProvinces.isEmpty) {
+      _showSimpleDialog(context, '攻撃', '${province.name}に隣接する味方の州がありません');
       return;
     }
+
+    // 兵力のある隣接州を選択
+    final availableProvinces = adjacentPlayerProvinces.where((p) => p.currentTroops > 0).toList();
+
+    if (availableProvinces.isEmpty) {
+      _showSimpleDialog(context, '攻撃', '隣接する味方の州に兵力がありません');
+      return;
+    }
+
+    // 最も兵力の多い州を選択
+    final sourceProvince = availableProvinces.reduce((a, b) => a.currentTroops > b.currentTroops ? a : b);
 
     showDialog(
       context: context,
@@ -487,10 +527,10 @@ class ProvinceDetailPanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('${province.name}を攻撃しますか？'),
+            Text('${sourceProvince.name} → ${province.name}'),
             const SizedBox(height: 8),
+            Text('攻撃元兵力: ${sourceProvince.currentTroops}'),
             Text('敵兵力: ${province.currentTroops}'),
-            Text('我が軍の総兵力: ${controller.getTotalTroops()}'),
             const SizedBox(height: 16),
             const Text(
               '注意: 戦闘には兵力損失のリスクがあります',
@@ -507,12 +547,12 @@ class ProvinceDetailPanel extends StatelessWidget {
             child: const Text('キャンセル'),
           ),
           ElevatedButton(
-            onPressed: controller.getTotalTroops() > 0
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.attackProvince(province.id);
-                  }
-                : null,
+            onPressed: () {
+              Navigator.of(context).pop();
+              // 攻撃元の州を一時的に選択してから攻撃
+              controller.selectProvince(sourceProvince.id);
+              controller.attackProvince(province.id);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -622,5 +662,37 @@ class ProvinceDetailPanel extends StatelessWidget {
         builder: (context) => DiplomacyScreen(controller: controller),
       ),
     );
+  }
+
+  /// 攻撃可能かどうかをチェック
+  bool _canAttackProvince() {
+    // プレイヤーの隣接州を取得
+    final playerProvinces = controller.getPlayerProvinces();
+    final adjacentPlayerProvinces = playerProvinces.where((p) => p.adjacentProvinceIds.contains(province.id)).toList();
+
+    if (adjacentPlayerProvinces.isEmpty) return false;
+
+    // 兵力のある隣接州があるか
+    final availableProvinces = adjacentPlayerProvinces.where((p) => p.currentTroops > 0).toList();
+
+    return availableProvinces.isNotEmpty;
+  }
+
+  /// 攻撃状況のメッセージを取得
+  String _getAttackStatusMessage() {
+    final playerProvinces = controller.getPlayerProvinces();
+    final adjacentPlayerProvinces = playerProvinces.where((p) => p.adjacentProvinceIds.contains(province.id)).toList();
+
+    if (adjacentPlayerProvinces.isEmpty) {
+      return '※ 攻撃するには隣接する味方の州が必要です';
+    }
+
+    final availableProvinces = adjacentPlayerProvinces.where((p) => p.currentTroops > 0).toList();
+
+    if (availableProvinces.isEmpty) {
+      return '※ 隣接する味方の州に兵力がありません';
+    }
+
+    return '';
   }
 }
