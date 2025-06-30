@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/water_margin_game_controller.dart';
-import '../models/water_margin_strategy_game.dart';
-import '../services/game_save_service.dart';
 import '../widgets/game_map_widget.dart';
 import '../widgets/game_info_panel.dart';
 import '../widgets/province_detail_panel.dart';
 import '../widgets/battle_result_dialog.dart';
+import '../widgets/game_command_bar.dart';
 import '../core/app_config.dart';
-import 'diplomacy_screen.dart';
-import 'hero_management_screen.dart';
 
 /// 水滸伝戦略ゲームのメイン画面
 class WaterMarginGameScreen extends StatelessWidget {
@@ -168,103 +165,8 @@ class _WaterMarginGameView extends StatelessWidget {
                       ),
                     ),
 
-                    // 操作ボタン
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        border: const Border(top: BorderSide(color: Colors.grey)),
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed:
-                                  controller.gameState.gameStatus == GameStatus.playing ? controller.endTurn : null,
-                              icon: const Icon(Icons.skip_next),
-                              label: const Text('ターン終了'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: controller.selectedProvince != null &&
-                                      controller.selectedProvince!.controller == Faction.liangshan
-                                  ? () => controller.developProvince(
-                                      controller.selectedProvince!.id, DevelopmentType.agriculture)
-                                  : null,
-                              icon: const Icon(Icons.build),
-                              label: const Text('農業開発'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => _showSaveDialog(context, controller),
-                              icon: const Icon(Icons.save),
-                              label: const Text('セーブ'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => _showLoadDialog(context, controller),
-                              icon: const Icon(Icons.folder_open),
-                              label: const Text('ロード'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => controller.initializeGame(),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('新規ゲーム'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => DiplomacyScreen(controller: controller),
-                                ),
-                              ),
-                              icon: const Icon(Icons.handshake),
-                              label: const Text('外交'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => HeroManagementScreen(controller: controller),
-                                ),
-                              ),
-                              icon: const Icon(Icons.group),
-                              label: const Text('英雄管理'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.indigo,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // 統一コマンドバー
+                    const GameCommandBar(),
                   ],
                 ),
               ),
@@ -418,144 +320,5 @@ class _WaterMarginGameView extends StatelessWidget {
       // ダイアログが閉じられたら戦闘結果をクリア
       controller.clearBattleResult();
     });
-  }
-
-  /// セーブダイアログを表示
-  void _showSaveDialog(BuildContext context, WaterMarginGameController controller) {
-    final TextEditingController nameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('ゲームデータ保存'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('セーブファイル名を入力してください：'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                hintText: '例: セーブデータ1',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final saveName = nameController.text.trim();
-              if (saveName.isNotEmpty) {
-                final success = await controller.saveGame(saveName: saveName);
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success ? 'セーブが完了しました' : 'セーブに失敗しました'),
-                      backgroundColor: success ? Colors.green : Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ロードダイアログを表示
-  void _showLoadDialog(BuildContext context, WaterMarginGameController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('ゲームデータ読込'),
-        content: SizedBox(
-          width: 300,
-          height: 400,
-          child: FutureBuilder<List<SaveFileInfo>>(
-            future: controller.getSaveList(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError) {
-                return const Center(child: Text('エラーが発生しました'));
-              }
-
-              final saveFiles = snapshot.data ?? [];
-
-              if (saveFiles.isEmpty) {
-                return const Center(child: Text('セーブファイルがありません'));
-              }
-
-              return ListView.builder(
-                itemCount: saveFiles.length,
-                itemBuilder: (context, index) {
-                  final saveFile = saveFiles[index];
-                  return ListTile(
-                    title: Text(saveFile.saveName),
-                    subtitle: Text(saveFile.formattedTime),
-                    trailing: Text('ターン${saveFile.turn}'),
-                    onTap: () async {
-                      final success = await controller.loadGame(saveFile.saveName);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(success ? 'ロードが完了しました' : 'ロードに失敗しました'),
-                            backgroundColor: success ? Colors.green : Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final success = await controller.loadAutoSave();
-              if (context.mounted) {
-                Navigator.of(context).pop();
-
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('オートセーブデータをロードしました'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('オートセーブデータがありません'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('オートセーブ'),
-          ),
-        ],
-      ),
-    );
   }
 }

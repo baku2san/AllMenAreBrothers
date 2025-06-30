@@ -312,12 +312,12 @@ class ProvinceDetailPanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('開発項目を選択してください (費用: 500両)'),
+            const Text('開発項目を選択してください (費用: 200両)'),
             const SizedBox(height: 16),
             Text('現在の資金: ${gameState.playerGold}両'),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500
+              onPressed: gameState.playerGold >= 200
                   ? () {
                       Navigator.of(context).pop();
                       controller.developProvince(province.id, DevelopmentType.agriculture);
@@ -328,7 +328,7 @@ class ProvinceDetailPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500
+              onPressed: gameState.playerGold >= 200
                   ? () {
                       Navigator.of(context).pop();
                       controller.developProvince(province.id, DevelopmentType.commerce);
@@ -339,7 +339,7 @@ class ProvinceDetailPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500
+              onPressed: gameState.playerGold >= 200
                   ? () {
                       Navigator.of(context).pop();
                       controller.developProvince(province.id, DevelopmentType.military);
@@ -350,7 +350,7 @@ class ProvinceDetailPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500
+              onPressed: gameState.playerGold >= 200
                   ? () {
                       Navigator.of(context).pop();
                       controller.developProvince(province.id, DevelopmentType.security);
@@ -611,7 +611,7 @@ class ProvinceDetailPanel extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500
+              onPressed: gameState.playerGold >= 200
                   ? () {
                       Navigator.of(context).pop();
                       controller.performDiplomaticAction(province.controller, DiplomaticAction.requestTrade);
