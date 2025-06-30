@@ -22,7 +22,7 @@ class ProvinceDetailPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPlayerProvince = province.controller == Faction.liangshan;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -61,9 +61,9 @@ class ProvinceDetailPanel extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 特殊効果
             if (province.specialFeature != null) ...[
               Container(
@@ -83,7 +83,7 @@ class ProvinceDetailPanel extends StatelessWidget {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // 州のステータス
             const Text(
               '州の状況',
@@ -93,16 +93,16 @@ class ProvinceDetailPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             _buildStatusBar('人口', province.state.population, 1000, Icons.people),
             _buildStatusBar('農業', province.state.agriculture, 100, Icons.agriculture),
             _buildStatusBar('商業', province.state.commerce, 100, Icons.store),
             _buildStatusBar('治安', province.state.security, 100, Icons.security),
             _buildStatusBar('軍事', province.state.military, 100, Icons.military_tech),
             _buildStatusBar('民心', province.state.loyalty, 100, Icons.favorite),
-            
+
             const SizedBox(height: 16),
-            
+
             // 軍事情報
             Container(
               padding: const EdgeInsets.all(12),
@@ -128,9 +128,9 @@ class ProvinceDetailPanel extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 行動ボタン
             if (isPlayerProvince) ...[
               const Text(
@@ -141,7 +141,6 @@ class ProvinceDetailPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              
               _buildActionButton(
                 '内政開発',
                 Icons.build,
@@ -166,7 +165,6 @@ class ProvinceDetailPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              
               _buildActionButton(
                 '攻撃',
                 Icons.gps_fixed,
@@ -187,7 +185,7 @@ class ProvinceDetailPanel extends StatelessWidget {
   /// ステータスバーを構築
   Widget _buildStatusBar(String label, int value, int maxValue, IconData icon) {
     final percentage = (value / maxValue).clamp(0.0, 1.0);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -290,45 +288,45 @@ class ProvinceDetailPanel extends StatelessWidget {
             Text('現在の資金: ${gameState.playerGold}両'),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500 
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.developProvince(province.id, DevelopmentType.agriculture);
-                  }
-                : null,
+              onPressed: gameState.playerGold >= 500
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.developProvince(province.id, DevelopmentType.agriculture);
+                    }
+                  : null,
               icon: const Icon(Icons.agriculture),
               label: const Text('農業開発 (+10)'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500 
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.developProvince(province.id, DevelopmentType.commerce);
-                  }
-                : null,
+              onPressed: gameState.playerGold >= 500
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.developProvince(province.id, DevelopmentType.commerce);
+                    }
+                  : null,
               icon: const Icon(Icons.store),
               label: const Text('商業開発 (+10)'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500 
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.developProvince(province.id, DevelopmentType.military);
-                  }
-                : null,
+              onPressed: gameState.playerGold >= 500
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.developProvince(province.id, DevelopmentType.military);
+                    }
+                  : null,
               icon: const Icon(Icons.military_tech),
               label: const Text('軍事強化 (+10)'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 500 
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.developProvince(province.id, DevelopmentType.security);
-                  }
-                : null,
+              onPressed: gameState.playerGold >= 500
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.developProvince(province.id, DevelopmentType.security);
+                    }
+                  : null,
               icon: const Icon(Icons.security),
               label: const Text('治安改善 (+10)'),
             ),
@@ -347,14 +345,14 @@ class ProvinceDetailPanel extends StatelessWidget {
   /// 徴兵ダイアログを表示
   void _showRecruitmentDialog(BuildContext context) {
     final maxRecruits = province.state.maxTroops - province.currentTroops;
-    
+
     if (maxRecruits <= 0) {
       _showSimpleDialog(context, '徴兵', '${province.name}では兵力が上限に達しています');
       return;
     }
 
     int recruitAmount = 10; // デフォルト徴兵数
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -392,11 +390,11 @@ class ProvinceDetailPanel extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: gameState.playerGold >= recruitAmount * 10
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.recruitTroops(province.id, recruitAmount);
-                  }
-                : null,
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.recruitTroops(province.id, recruitAmount);
+                    }
+                  : null,
               child: const Text('徴兵実行'),
             ),
           ],
@@ -407,10 +405,9 @@ class ProvinceDetailPanel extends StatelessWidget {
 
   /// 英雄派遣ダイアログを表示
   void _showHeroAssignmentDialog(BuildContext context) {
-    final availableHeroes = gameState.heroes.where((hero) => 
-      hero.faction == Faction.liangshan && 
-      hero.currentProvinceId != province.id
-    ).toList();
+    final availableHeroes = gameState.heroes
+        .where((hero) => hero.faction == Faction.liangshan && hero.currentProvinceId != province.id)
+        .toList();
 
     if (availableHeroes.isEmpty) {
       _showSimpleDialog(context, '英雄派遣', '派遣可能な英雄がいません');
@@ -509,11 +506,11 @@ class ProvinceDetailPanel extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: controller.getTotalTroops() > 0
-              ? () {
-                  Navigator.of(context).pop();
-                  controller.attackProvince(province.id);
-                }
-              : null,
+                ? () {
+                    Navigator.of(context).pop();
+                    controller.attackProvince(province.id);
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -560,22 +557,22 @@ class ProvinceDetailPanel extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: gameState.playerGold >= 200
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.negotiateWithProvince(province.id, 'peace');
-                  }
-                : null,
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.negotiateWithProvince(province.id, 'peace');
+                    }
+                  : null,
               icon: const Icon(Icons.handshake),
               label: const Text('和平交渉'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: gameState.playerGold >= 200
-                ? () {
-                    Navigator.of(context).pop();
-                    controller.negotiateWithProvince(province.id, 'trade');
-                  }
-                : null,
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.negotiateWithProvince(province.id, 'trade');
+                    }
+                  : null,
               icon: const Icon(Icons.attach_money),
               label: const Text('貿易交渉'),
             ),

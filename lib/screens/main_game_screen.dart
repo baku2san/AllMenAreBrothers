@@ -78,7 +78,7 @@ class _MainGameScreenState extends State<MainGameScreen> {
               onProvinceSelected: _onProvinceSelected,
             ),
           ),
-          
+
           // 右側: 情報パネル
           Container(
             width: 300,
@@ -90,7 +90,7 @@ class _MainGameScreenState extends State<MainGameScreen> {
                   gameState: _gameState,
                   onEndTurn: _onEndTurn,
                 ),
-                
+
                 // 選択された州の詳細パネル
                 if (_gameState.selectedProvince != null)
                   const Expanded(

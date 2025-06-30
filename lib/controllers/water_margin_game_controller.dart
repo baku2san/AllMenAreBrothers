@@ -205,16 +205,15 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 英雄派遣（簡易版）
   void assignHeroToProvince(String heroId, String provinceId) {
     final hero = _gameState.heroes.firstWhere(
-      (h) => h.id == heroId, 
+      (h) => h.id == heroId,
       orElse: () => throw ArgumentError('Hero not found: $heroId'),
     );
     final province = _gameState.provinces[provinceId];
-    
+
     if (province == null || province.controller != Faction.liangshan) return;
 
-    final updatedHeroes = _gameState.heroes.map((h) => 
-      h.id == heroId ? h.copyWith(currentProvinceId: provinceId) : h
-    ).toList();
+    final updatedHeroes =
+        _gameState.heroes.map((h) => h.id == heroId ? h.copyWith(currentProvinceId: provinceId) : h).toList();
 
     _gameState = _gameState.copyWith(heroes: updatedHeroes);
     _addEventLog('${hero.name}を${province.name}に派遣しました');
