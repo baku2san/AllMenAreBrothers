@@ -528,8 +528,8 @@ class WaterMarginGameController extends ChangeNotifier {
       controller: result.territoryConquered ? sourceProvince.controller : targetProvince.controller,
     );
 
-    // 英雄の経験値を更新（将来実装）
-    // TODO: result.heroResults を使って英雄の経験値とレベルアップを処理
+    // 英雄の経験値を更新
+    _applyHeroBattleExperience(result.heroResults);
 
     _gameState = _gameState.copyWith(provinces: updatedProvinces);
 
@@ -553,6 +553,25 @@ class WaterMarginGameController extends ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  /// 戦闘での英雄経験値を適用
+  void _applyHeroBattleExperience(List<HeroBattleResult> heroResults) {
+    for (final heroResult in heroResults) {
+      if (heroResult.hero.faction == Faction.liangshan) {
+        addHeroExperience(heroResult.hero.id, heroResult.experienceGained);
+
+        // 特別な戦績がある場合
+        if (heroResult.specialAchievement != null) {
+          _addEventLog('${heroResult.hero.name}: ${heroResult.specialAchievement}');
+        }
+
+        // 負傷判定
+        if (heroResult.isInjured) {
+          _addEventLog('${heroResult.hero.name}が負傷しました');
+        }
+      }
+    }
   }
 
   // 最後の戦闘結果を保持（UIから参照するため）
@@ -604,6 +623,87 @@ class WaterMarginGameController extends ChangeNotifier {
   /// セーブファイル一覧を取得
   Future<List<SaveFileInfo>> getSaveList() async {
     return await GameSaveService.getSaveList();
+  }
+
+  /// 英雄に経験値を追加
+  void addHeroExperience(String heroId, int amount) {
+    final heroIndex = _gameState.heroes.indexWhere((h) => h.id == heroId);
+    if (heroIndex == -1) return;
+
+    final hero = _gameState.heroes[heroIndex];
+    final updatedHero = hero.copyWith(experience: hero.experience + amount);
+
+    final updatedHeroes = List<Hero>.from(_gameState.heroes);
+    updatedHeroes[heroIndex] = updatedHero;
+
+    _gameState = _gameState.copyWith(heroes: updatedHeroes);
+
+    // レベルアップチェック
+    _checkHeroLevelUp(hero, updatedHero);
+
+    notifyListeners();
+  }
+
+  /// 英雄訓練（費用を消費して経験値獲得）
+  void trainHero(String heroId, int cost, int expGain) {
+    if (_gameState.playerGold < cost) {
+      _addEventLog('訓練費用が不足しています');
+      return;
+    }
+
+    _gameState = _gameState.copyWith(playerGold: _gameState.playerGold - cost);
+    addHeroExperience(heroId, expGain);
+  }
+
+  /// 英雄レベルとスキル習得チェック
+  void _checkHeroLevelUp(Hero oldHero, Hero newHero) {
+    final oldLevel = (oldHero.experience / 100).floor() + 1;
+    final newLevel = (newHero.experience / 100).floor() + 1;
+
+    if (newLevel > oldLevel) {
+      _addEventLog('🌟 ${newHero.name}がレベル$newLevelに上がりました！');
+
+      // スキル習得チェック（簡易版）
+      final skills = _getLearnableSkillsAtLevel(newHero, newLevel);
+      for (final skill in skills) {
+        _addEventLog('✨ ${newHero.name}が新しいスキル「$skill」を習得！');
+      }
+    }
+  }
+
+  /// レベル習得時のスキル一覧（簡易版）
+  List<String> _getLearnableSkillsAtLevel(Hero hero, int level) {
+    final skills = <String>[];
+
+    switch (hero.skill) {
+      case HeroSkill.warrior:
+        if (level == 5) skills.add('強打');
+        if (level == 10) skills.add('連撃');
+        if (level == 15) skills.add('必殺技');
+        break;
+      case HeroSkill.strategist:
+        if (level == 5) skills.add('戦術指導');
+        if (level == 10) skills.add('計略');
+        if (level == 15) skills.add('天下三分');
+        break;
+      case HeroSkill.administrator:
+        if (level == 5) skills.add('行政改革');
+        if (level == 10) skills.add('徴税強化');
+        if (level == 15) skills.add('民心安定');
+        break;
+      case HeroSkill.diplomat:
+        if (level == 5) skills.add('説得術');
+        if (level == 10) skills.add('同盟締結');
+        if (level == 15) skills.add('天下統一の理想');
+        break;
+      case HeroSkill.scout:
+        if (level == 5) skills.add('情報収集');
+        if (level == 10) skills.add('敵情偵察');
+        if (level == 15) skills.add('完全隠密');
+        break;
+    }
+
+    return skills;
   }
 }
 
