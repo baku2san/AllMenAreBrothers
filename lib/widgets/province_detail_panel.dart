@@ -4,7 +4,9 @@ library;
 
 import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../models/diplomacy_system.dart';
 import '../controllers/water_margin_game_controller.dart';
+import '../screens/diplomacy_screen.dart';
 
 /// 州詳細パネル
 class ProvinceDetailPanel extends StatelessWidget {
@@ -552,37 +554,54 @@ class ProvinceDetailPanel extends StatelessWidget {
             Text('${province.name}(${province.controller.displayName})との交渉'),
             const SizedBox(height: 8),
             Text('現在の資金: ${gameState.playerGold}両'),
+            const SizedBox(height: 8),
+            Text('関係値: ${controller.getDiplomaticRelation(province.controller)}'),
             const SizedBox(height: 16),
-            const Text('交渉の種類を選択してください (費用: 200両):'),
+            const Text('外交行動を選択してください:'),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 200
+              onPressed: gameState.playerGold >= 300
                   ? () {
                       Navigator.of(context).pop();
-                      controller.negotiateWithProvince(province.id, 'peace');
+                      controller.performDiplomaticAction(province.controller, DiplomaticAction.declarePeace);
                     }
                   : null,
               icon: const Icon(Icons.handshake),
-              label: const Text('和平交渉'),
+              label: const Text('平和宣言 (300両)'),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(width: 8),
             ElevatedButton.icon(
-              onPressed: gameState.playerGold >= 200
+              onPressed: gameState.playerGold >= 500
                   ? () {
                       Navigator.of(context).pop();
-                      controller.negotiateWithProvince(province.id, 'trade');
+                      controller.performDiplomaticAction(province.controller, DiplomaticAction.requestTrade);
                     }
                   : null,
               icon: const Icon(Icons.attach_money),
-              label: const Text('貿易交渉'),
+              label: const Text('貿易要請 (500両)'),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              '※ 交渉の成功率は約30%です',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: gameState.playerGold >= 400
+                  ? () {
+                      Navigator.of(context).pop();
+                      controller.performDiplomaticAction(province.controller, DiplomaticAction.sendGift);
+                    }
+                  : null,
+              icon: const Icon(Icons.card_giftcard),
+              label: const Text('贈り物 (400両)'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showFullDiplomacyScreen(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
               ),
+              child: const Text('詳細な外交画面を開く'),
             ),
           ],
         ),
@@ -592,6 +611,15 @@ class ProvinceDetailPanel extends StatelessWidget {
             child: const Text('キャンセル'),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 詳細な外交画面を表示
+  void _showFullDiplomacyScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DiplomacyScreen(controller: controller),
       ),
     );
   }

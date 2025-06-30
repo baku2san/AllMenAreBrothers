@@ -9,6 +9,7 @@ import '../data/water_margin_map.dart';
 import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../models/advanced_battle_system.dart';
+import '../models/diplomacy_system.dart';
 import '../services/game_save_service.dart';
 import '../core/app_config.dart';
 import '../utils/app_utils.dart';
@@ -62,6 +63,7 @@ class WaterMarginGameController extends ChangeNotifier {
         currentTurn: 1,
         playerGold: AppConstants.initialPlayerGold,
         gameStatus: GameStatus.playing,
+        diplomacy: DiplomacySystem.withDefaults(),
       );
 
       _eventLog.clear();
@@ -110,6 +112,9 @@ class WaterMarginGameController extends ChangeNotifier {
       currentTurn: _gameState.currentTurn + 1,
       playerGold: _gameState.playerGold + income,
     );
+
+    // 貿易収入を処理
+    _processTradeincome();
 
     // オートセーブを実行
     autoSave();
@@ -218,6 +223,180 @@ class WaterMarginGameController extends ChangeNotifier {
     _gameState = _gameState.copyWith(heroes: updatedHeroes);
     _addEventLog('${hero.name}を${province.name}に派遣しました');
     notifyListeners();
+  }
+
+  /// 外交行動を実行
+  void performDiplomaticAction(Faction targetFaction, DiplomaticAction action) {
+    final diplomacy = _gameState.diplomacy;
+    if (diplomacy == null) {
+      _addEventLog('外交システムが利用できません');
+      return;
+    }
+
+    // コストチェック
+    if (_gameState.playerGold < action.cost) {
+      _addEventLog('${action.displayName}に必要な資金が不足しています (必要: ${action.cost}両)');
+      return;
+    }
+
+    // 成功率計算
+    final successRate = diplomacy.calculateSuccessRate(Faction.liangshan, targetFaction, action);
+    final success = Random().nextDouble() < successRate;
+
+    // 資金消費
+    _gameState = _gameState.copyWith(
+      playerGold: _gameState.playerGold - action.cost,
+    );
+
+    if (success) {
+      _handleSuccessfulDiplomacy(targetFaction, action, diplomacy);
+    } else {
+      _handleFailedDiplomacy(targetFaction, action, diplomacy);
+    }
+
+    notifyListeners();
+  }
+
+  /// 成功した外交行動の処理
+  void _handleSuccessfulDiplomacy(Faction targetFaction, DiplomaticAction action, DiplomacySystem diplomacy) {
+    final currentRelation = diplomacy.getRelation(Faction.liangshan, targetFaction);
+    final newRelation = (currentRelation + action.relationChange).clamp(-100, 100);
+
+    final updatedDiplomacy = diplomacy.setRelation(Faction.liangshan, targetFaction, newRelation);
+
+    switch (action) {
+      case DiplomaticAction.requestAlliance:
+        if (newRelation >= 80) {
+          final treaty = Treaty(
+            id: 'alliance_${targetFaction.name}_${_gameState.currentTurn}',
+            type: TreatyType.militaryAlliance,
+            faction1: Faction.liangshan,
+            faction2: targetFaction,
+            startTurn: _gameState.currentTurn,
+            duration: TreatyType.militaryAlliance.duration,
+          );
+          _gameState = _gameState.copyWith(
+            diplomacy: updatedDiplomacy.addTreaty(treaty),
+          );
+          _addEventLog('${targetFaction.displayName}との軍事同盟が成立しました！');
+        } else {
+          _gameState = _gameState.copyWith(diplomacy: updatedDiplomacy);
+          _addEventLog('${targetFaction.displayName}との関係が改善しました');
+        }
+        break;
+
+      case DiplomaticAction.requestTrade:
+        final tradeRoute = TradeRoute(
+          id: 'trade_${targetFaction.name}_${_gameState.currentTurn}',
+          sourceProvinceId: 'liangshan', // 梁山泊の拠点
+          targetProvinceId: 'bianliang', // 仮の相手州
+          goldPerTurn: 100 + (newRelation ~/ 10),
+          startTurn: _gameState.currentTurn,
+        );
+
+        final treaty = Treaty(
+          id: 'trade_${targetFaction.name}_${_gameState.currentTurn}',
+          type: TreatyType.tradeAgreement,
+          faction1: Faction.liangshan,
+          faction2: targetFaction,
+          startTurn: _gameState.currentTurn,
+          duration: TreatyType.tradeAgreement.duration,
+        );
+
+        _gameState = _gameState.copyWith(
+          diplomacy: updatedDiplomacy.addTreaty(treaty).addTradeRoute(tradeRoute),
+        );
+        _addEventLog('${targetFaction.displayName}との貿易協定が成立しました (収入+${tradeRoute.goldPerTurn}両/ターン)');
+        break;
+
+      case DiplomaticAction.demandTribute:
+        final tribute = 200 + Random().nextInt(300);
+        _gameState = _gameState.copyWith(
+          playerGold: _gameState.playerGold + tribute,
+          diplomacy: updatedDiplomacy,
+        );
+        _addEventLog('${targetFaction.displayName}から$tribute両の貢ぎ物を受け取りました');
+        break;
+
+      case DiplomaticAction.declarePeace:
+        final treaty = Treaty(
+          id: 'peace_${targetFaction.name}_${_gameState.currentTurn}',
+          type: TreatyType.nonAggression,
+          faction1: Faction.liangshan,
+          faction2: targetFaction,
+          startTurn: _gameState.currentTurn,
+          duration: TreatyType.nonAggression.duration,
+        );
+        _gameState = _gameState.copyWith(
+          diplomacy: updatedDiplomacy.addTreaty(treaty),
+        );
+        _addEventLog('${targetFaction.displayName}との不可侵条約が成立しました');
+        break;
+
+      case DiplomaticAction.sendGift:
+        _gameState = _gameState.copyWith(diplomacy: updatedDiplomacy);
+        _addEventLog('${targetFaction.displayName}に贈り物を送り、関係が改善しました');
+        break;
+
+      case DiplomaticAction.threaten:
+        _gameState = _gameState.copyWith(diplomacy: updatedDiplomacy);
+        _addEventLog('${targetFaction.displayName}への威嚇が効果を上げました');
+        break;
+    }
+  }
+
+  /// 失敗した外交行動の処理
+  void _handleFailedDiplomacy(Faction targetFaction, DiplomaticAction action, DiplomacySystem diplomacy) {
+    // 失敗時は関係悪化のリスク
+    final penalty = action.relationChange < 0 ? action.relationChange ~/ 2 : -10;
+    final currentRelation = diplomacy.getRelation(Faction.liangshan, targetFaction);
+    final newRelation = (currentRelation + penalty).clamp(-100, 100);
+
+    _gameState = _gameState.copyWith(
+      diplomacy: diplomacy.setRelation(Faction.liangshan, targetFaction, newRelation),
+    );
+
+    _addEventLog('${targetFaction.displayName}との${action.displayName}は失敗しました');
+  }
+
+  /// 勢力との関係を取得
+  int getDiplomaticRelation(Faction faction) {
+    return _gameState.diplomacy?.getRelation(Faction.liangshan, faction) ?? 0;
+  }
+
+  /// 勢力との関係レベルを取得
+  DiplomaticRelation getDiplomaticRelationLevel(Faction faction) {
+    return _gameState.diplomacy?.getRelationLevel(Faction.liangshan, faction) ?? DiplomaticRelation.neutral;
+  }
+
+  /// 有効な協定のリストを取得
+  List<Treaty> getActiveTreaties() {
+    return _gameState.diplomacy?.getActiveTreaties(_gameState.currentTurn) ?? [];
+  }
+
+  /// 勢力間に協定があるかチェック
+  bool hasTreatyWith(Faction faction, TreatyType type) {
+    return _gameState.diplomacy?.hasTreaty(Faction.liangshan, faction, type, _gameState.currentTurn) ?? false;
+  }
+
+  /// 貿易収入を処理 (ターン終了時に呼ばれる)
+  void _processTradeincome() {
+    final diplomacy = _gameState.diplomacy;
+    if (diplomacy == null) return;
+
+    int totalTradeIncome = 0;
+    for (final province in _gameState.provinces.values) {
+      if (province.controller == Faction.liangshan) {
+        totalTradeIncome += diplomacy.calculateTradeIncome(province.id);
+      }
+    }
+
+    if (totalTradeIncome > 0) {
+      _gameState = _gameState.copyWith(
+        playerGold: _gameState.playerGold + totalTradeIncome,
+      );
+      _addEventLog('貿易により$totalTradeIncome両の収入を得ました');
+    }
   }
 
   /// 交渉（簡易版）

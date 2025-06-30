@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'diplomacy_system.dart';
 
 /// 勢力（プレイヤー、朝廷、豪族など）
 enum Faction {
@@ -378,6 +379,7 @@ class WaterMarginGameState {
     required this.gameStatus,
     this.selectedProvinceId,
     this.selectedHeroId,
+    this.diplomacy,
   });
 
   final Map<String, Province> provinces; // Mapに変更してAIシステムと互換性を持つ
@@ -388,6 +390,7 @@ class WaterMarginGameState {
   final GameStatus gameStatus;
   final String? selectedProvinceId;
   final String? selectedHeroId;
+  final DiplomacySystem? diplomacy; // 外交システム
 
   WaterMarginGameState copyWith({
     Map<String, Province>? provinces,
@@ -398,6 +401,7 @@ class WaterMarginGameState {
     GameStatus? gameStatus,
     String? selectedProvinceId,
     String? selectedHeroId,
+    DiplomacySystem? diplomacy,
   }) {
     return WaterMarginGameState(
       provinces: provinces ?? this.provinces,
@@ -408,6 +412,7 @@ class WaterMarginGameState {
       gameStatus: gameStatus ?? this.gameStatus,
       selectedProvinceId: selectedProvinceId ?? this.selectedProvinceId,
       selectedHeroId: selectedHeroId ?? this.selectedHeroId,
+      diplomacy: diplomacy ?? this.diplomacy,
     );
   }
 
@@ -462,6 +467,7 @@ class WaterMarginGameState {
       'gameStatus': gameStatus.name,
       'selectedProvinceId': selectedProvinceId,
       'selectedHeroId': selectedHeroId,
+      'diplomacy': diplomacy?.toJson(),
     };
   }
 
@@ -499,6 +505,7 @@ class WaterMarginGameState {
       ),
       selectedProvinceId: json['selectedProvinceId'],
       selectedHeroId: json['selectedHeroId'],
+      diplomacy: json['diplomacy'] != null ? DiplomacySystem.fromJson(json['diplomacy']) : null,
     );
   }
 }

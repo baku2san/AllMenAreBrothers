@@ -12,6 +12,7 @@ import '../widgets/game_info_panel.dart';
 import '../widgets/province_detail_panel.dart';
 import '../widgets/battle_result_dialog.dart';
 import '../core/app_config.dart';
+import 'diplomacy_screen.dart';
 
 /// 水滸伝戦略ゲームのメイン画面
 class WaterMarginGameScreen extends StatelessWidget {
@@ -202,6 +203,20 @@ class _WaterMarginGameView extends StatelessWidget {
                               label: const Text('新規ゲーム'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => DiplomacyScreen(controller: controller),
+                                ),
+                              ),
+                              icon: const Icon(Icons.handshake),
+                              label: const Text('外交'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
                                 foregroundColor: Colors.white,
                               ),
                             ),

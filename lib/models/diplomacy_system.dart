@@ -1,311 +1,383 @@
-/// 外交システム
-/// 勢力間の外交関係と交渉を管理
+/// 水滸伝戦略ゲーム - 包括的外交システム
+/// 同盟、貿易、外交関係の管理
 library;
 
 import '../models/water_margin_strategy_game.dart';
 
 /// 外交関係の種類
 enum DiplomaticRelation {
-  ally, // 同盟
-  neutral, // 中立
-  hostile, // 敵対
-  war, // 戦争状態
+  hostile(-100, '敵対'), // 敵対関係
+  unfriendly(-50, '非友好'), // 非友好
+  neutral(0, '中立'), // 中立
+  friendly(50, '友好'), // 友好
+  allied(100, '同盟'); // 同盟
+
+  const DiplomaticRelation(this.value, this.displayName);
+  final int value;
+  final String displayName;
 }
 
-/// 外交状態
-class DiplomaticState {
-  const DiplomaticState({
-    required this.relation,
-    required this.trustLevel,
-    this.lastInteraction,
-    this.treatyExpiration,
-  });
+/// 外交協定の種類
+enum TreatyType {
+  nonAggression('不可侵条約', 500, 10), // 不可侵条約
+  tradeAgreement('貿易協定', 800, 15), // 貿易協定
+  militaryAlliance('軍事同盟', 1500, 25), // 軍事同盟
+  vassalage('従属条約', 2000, 30); // 従属条約
 
-  final DiplomaticRelation relation;
-  final int trustLevel; // 0-100の信頼度
-  final DateTime? lastInteraction; // 最後の外交接触
-  final DateTime? treatyExpiration; // 条約の期限
-
-  DiplomaticState copyWith({
-    DiplomaticRelation? relation,
-    int? trustLevel,
-    DateTime? lastInteraction,
-    DateTime? treatyExpiration,
-  }) {
-    return DiplomaticState(
-      relation: relation ?? this.relation,
-      trustLevel: trustLevel ?? this.trustLevel,
-      lastInteraction: lastInteraction ?? this.lastInteraction,
-      treatyExpiration: treatyExpiration ?? this.treatyExpiration,
-    );
-  }
+  const TreatyType(this.displayName, this.cost, this.duration);
+  final String displayName;
+  final int cost;
+  final int duration; // ターン数
 }
 
 /// 外交行動の種類
 enum DiplomaticAction {
-  requestAlliance, // 同盟要請
-  declarePeace, // 平和宣言
-  declareWar, // 宣戦布告
-  requestTrade, // 貿易要請
-  demandTribute, // 貢ぎ物要求
-  offerTribute, // 貢ぎ物提供
+  requestAlliance('同盟要請', 1000, 50), // 同盟要請
+  declarePeace('平和宣言', 300, 20), // 平和宣言
+  requestTrade('貿易要請', 500, 30), // 貿易要請
+  demandTribute('貢ぎ物要求', 200, -30), // 貢ぎ物要求
+  sendGift('贈り物', 400, 25), // 贈り物
+  threaten('威嚇', 100, -40); // 威嚇
+
+  const DiplomaticAction(this.displayName, this.cost, this.relationChange);
+  final String displayName;
+  final int cost;
+  final int relationChange;
 }
 
-/// 外交行動の結果
-class DiplomaticResult {
-  const DiplomaticResult({
-    required this.success,
-    required this.message,
-    this.newRelation,
-    this.trustChange,
+/// 外交協定
+class Treaty {
+  const Treaty({
+    required this.id,
+    required this.type,
+    required this.faction1,
+    required this.faction2,
+    required this.startTurn,
+    required this.duration,
+    this.isActive = true,
+    this.additionalTerms = const [],
   });
 
-  final bool success;
-  final String message;
-  final DiplomaticRelation? newRelation;
-  final int? trustChange;
-}
+  final String id;
+  final TreatyType type;
+  final Faction faction1;
+  final Faction faction2;
+  final int startTurn;
+  final int duration;
+  final bool isActive;
+  final List<String> additionalTerms;
 
-/// 外交システム管理クラス
-class DiplomaticSystem {
-  DiplomaticSystem({Map<Faction, DiplomaticState>? relationships})
-      : _relationships = relationships ?? _initializeDefaultRelationships();
-
-  final Map<Faction, DiplomaticState> _relationships;
-
-  /// プレイヤー（梁山泊）との外交関係を取得
-  DiplomaticState? getRelationWith(Faction faction) {
-    return _relationships[faction];
+  /// 協定が有効かチェック
+  bool isValidAt(int currentTurn) {
+    return isActive && (currentTurn - startTurn) < duration;
   }
 
-  /// 外交関係を更新
-  void updateRelation(Faction faction, DiplomaticState newState) {
-    _relationships[faction] = newState;
+  /// 残り期間
+  int remainingTurns(int currentTurn) {
+    final remaining = duration - (currentTurn - startTurn);
+    return remaining > 0 ? remaining : 0;
   }
 
-  /// 外交行動を実行
-  DiplomaticResult performAction(
-    Faction targetFaction,
-    DiplomaticAction action,
-  ) {
-    final currentState = _relationships[targetFaction];
-    if (currentState == null) {
-      return const DiplomaticResult(
-        success: false,
-        message: '外交関係が存在しません',
-      );
-    }
-
-    switch (action) {
-      case DiplomaticAction.requestAlliance:
-        return _handleAllianceRequest(targetFaction, currentState);
-      case DiplomaticAction.declarePeace:
-        return _handlePeaceDeclaration(targetFaction, currentState);
-      case DiplomaticAction.declareWar:
-        return _handleWarDeclaration(targetFaction, currentState);
-      case DiplomaticAction.requestTrade:
-        return _handleTradeRequest(targetFaction, currentState);
-      case DiplomaticAction.demandTribute:
-        return _handleTributeDemand(targetFaction, currentState);
-      case DiplomaticAction.offerTribute:
-        return _handleTributeOffer(targetFaction, currentState);
-    }
+  /// コピーウィズ
+  Treaty copyWith({
+    String? id,
+    TreatyType? type,
+    Faction? faction1,
+    Faction? faction2,
+    int? startTurn,
+    int? duration,
+    bool? isActive,
+    List<String>? additionalTerms,
+  }) {
+    return Treaty(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      faction1: faction1 ?? this.faction1,
+      faction2: faction2 ?? this.faction2,
+      startTurn: startTurn ?? this.startTurn,
+      duration: duration ?? this.duration,
+      isActive: isActive ?? this.isActive,
+      additionalTerms: additionalTerms ?? this.additionalTerms,
+    );
   }
 
-  /// デフォルトの外交関係を初期化
-  static Map<Faction, DiplomaticState> _initializeDefaultRelationships() {
+  /// JSON変換
+  Map<String, dynamic> toJson() {
     return {
-      Faction.imperial: const DiplomaticState(
-        relation: DiplomaticRelation.hostile,
-        trustLevel: 10,
-      ),
-      Faction.warlord: const DiplomaticState(
-        relation: DiplomaticRelation.neutral,
-        trustLevel: 30,
-      ),
-      Faction.bandit: const DiplomaticState(
-        relation: DiplomaticRelation.neutral,
-        trustLevel: 50,
-      ),
-      Faction.neutral: const DiplomaticState(
-        relation: DiplomaticRelation.neutral,
-        trustLevel: 60,
-      ),
+      'id': id,
+      'type': type.name,
+      'faction1': faction1.name,
+      'faction2': faction2.name,
+      'startTurn': startTurn,
+      'duration': duration,
+      'isActive': isActive,
+      'additionalTerms': additionalTerms,
     };
   }
 
-  /// 同盟要請の処理
-  DiplomaticResult _handleAllianceRequest(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    if (currentState.relation == DiplomaticRelation.war) {
-      return const DiplomaticResult(
-        success: false,
-        message: '戦争中の勢力とは同盟を結べません',
-      );
-    }
-
-    if (currentState.trustLevel < 70) {
-      return DiplomaticResult(
-        success: false,
-        message: '信頼度が不足しています（現在: ${currentState.trustLevel}）',
-      );
-    }
-
-    final newState = currentState.copyWith(
-      relation: DiplomaticRelation.ally,
-      trustLevel: (currentState.trustLevel + 10).clamp(0, 100),
-      lastInteraction: DateTime.now(),
-      treatyExpiration: DateTime.now().add(const Duration(days: 365)),
+  /// JSONから作成
+  factory Treaty.fromJson(Map<String, dynamic> json) {
+    return Treaty(
+      id: json['id'] ?? '',
+      type: TreatyType.values.firstWhere(
+        (t) => t.name == json['type'],
+        orElse: () => TreatyType.nonAggression,
+      ),
+      faction1: Faction.values.firstWhere(
+        (f) => f.name == json['faction1'],
+        orElse: () => Faction.neutral,
+      ),
+      faction2: Faction.values.firstWhere(
+        (f) => f.name == json['faction2'],
+        orElse: () => Faction.neutral,
+      ),
+      startTurn: json['startTurn'] ?? 1,
+      duration: json['duration'] ?? 10,
+      isActive: json['isActive'] ?? true,
+      additionalTerms: List<String>.from(json['additionalTerms'] ?? []),
     );
+  }
+}
 
-    updateRelation(faction, newState);
+/// 貿易ルート
+class TradeRoute {
+  const TradeRoute({
+    required this.id,
+    required this.sourceProvinceId,
+    required this.targetProvinceId,
+    required this.goldPerTurn,
+    required this.startTurn,
+    this.isActive = true,
+  });
 
-    return DiplomaticResult(
-      success: true,
-      message: '${faction.displayName}との同盟が成立しました',
-      newRelation: DiplomaticRelation.ally,
-      trustChange: 10,
+  final String id;
+  final String sourceProvinceId;
+  final String targetProvinceId;
+  final int goldPerTurn;
+  final int startTurn;
+  final bool isActive;
+
+  /// コピーウィズ
+  TradeRoute copyWith({
+    String? id,
+    String? sourceProvinceId,
+    String? targetProvinceId,
+    int? goldPerTurn,
+    int? startTurn,
+    bool? isActive,
+  }) {
+    return TradeRoute(
+      id: id ?? this.id,
+      sourceProvinceId: sourceProvinceId ?? this.sourceProvinceId,
+      targetProvinceId: targetProvinceId ?? this.targetProvinceId,
+      goldPerTurn: goldPerTurn ?? this.goldPerTurn,
+      startTurn: startTurn ?? this.startTurn,
+      isActive: isActive ?? this.isActive,
     );
   }
 
-  /// 平和宣言の処理
-  DiplomaticResult _handlePeaceDeclaration(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    if (currentState.relation != DiplomaticRelation.war) {
-      return const DiplomaticResult(
-        success: false,
-        message: '戦争状態ではありません',
+  /// JSON変換
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'sourceProvinceId': sourceProvinceId,
+      'targetProvinceId': targetProvinceId,
+      'goldPerTurn': goldPerTurn,
+      'startTurn': startTurn,
+      'isActive': isActive,
+    };
+  }
+
+  /// JSONから作成
+  factory TradeRoute.fromJson(Map<String, dynamic> json) {
+    return TradeRoute(
+      id: json['id'] ?? '',
+      sourceProvinceId: json['sourceProvinceId'] ?? '',
+      targetProvinceId: json['targetProvinceId'] ?? '',
+      goldPerTurn: json['goldPerTurn'] ?? 0,
+      startTurn: json['startTurn'] ?? 1,
+      isActive: json['isActive'] ?? true,
+    );
+  }
+}
+
+/// 外交システム管理クラス
+class DiplomacySystem {
+  const DiplomacySystem({
+    this.relations = const {},
+    this.treaties = const [],
+    this.tradeRoutes = const [],
+  });
+
+  final Map<String, int> relations; // "faction1-faction2" => 関係値
+  final List<Treaty> treaties;
+  final List<TradeRoute> tradeRoutes;
+
+  /// 二つの勢力間の関係値を取得
+  int getRelation(Faction faction1, Faction faction2) {
+    if (faction1 == faction2) return 100;
+
+    final key1 = '${faction1.name}-${faction2.name}';
+    final key2 = '${faction2.name}-${faction1.name}';
+
+    return relations[key1] ?? relations[key2] ?? 0;
+  }
+
+  /// 外交関係を設定
+  DiplomacySystem setRelation(Faction faction1, Faction faction2, int value) {
+    final key = '${faction1.name}-${faction2.name}';
+    final newRelations = Map<String, int>.from(relations);
+    newRelations[key] = value.clamp(-100, 100);
+
+    return copyWith(relations: newRelations);
+  }
+
+  /// 外交関係のレベルを取得
+  DiplomaticRelation getRelationLevel(Faction faction1, Faction faction2) {
+    final value = getRelation(faction1, faction2);
+
+    if (value >= 80) return DiplomaticRelation.allied;
+    if (value >= 30) return DiplomaticRelation.friendly;
+    if (value >= -30) return DiplomaticRelation.neutral;
+    if (value >= -70) return DiplomaticRelation.unfriendly;
+    return DiplomaticRelation.hostile;
+  }
+
+  /// 有効な協定を取得
+  List<Treaty> getActiveTreaties(int currentTurn) {
+    return treaties.where((treaty) => treaty.isValidAt(currentTurn)).toList();
+  }
+
+  /// 勢力間の協定を検索
+  Treaty? getTreaty(Faction faction1, Faction faction2, TreatyType type, int currentTurn) {
+    try {
+      return treaties.firstWhere(
+        (treaty) =>
+            treaty.isValidAt(currentTurn) &&
+            treaty.type == type &&
+            ((treaty.faction1 == faction1 && treaty.faction2 == faction2) ||
+                (treaty.faction1 == faction2 && treaty.faction2 == faction1)),
       );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 協定が存在するかチェック
+  bool hasTreaty(Faction faction1, Faction faction2, TreatyType type, int currentTurn) {
+    return getTreaty(faction1, faction2, type, currentTurn) != null;
+  }
+
+  /// 協定を追加
+  DiplomacySystem addTreaty(Treaty treaty) {
+    return copyWith(treaties: [...treaties, treaty]);
+  }
+
+  /// 貿易ルートを追加
+  DiplomacySystem addTradeRoute(TradeRoute route) {
+    return copyWith(tradeRoutes: [...tradeRoutes, route]);
+  }
+
+  /// アクティブな貿易ルートを取得
+  List<TradeRoute> getActiveTradeRoutes() {
+    return tradeRoutes.where((route) => route.isActive).toList();
+  }
+
+  /// 州の貿易ルートを取得
+  List<TradeRoute> getProvinceTradeRoutes(String provinceId) {
+    return tradeRoutes
+        .where(
+            (route) => route.isActive && (route.sourceProvinceId == provinceId || route.targetProvinceId == provinceId))
+        .toList();
+  }
+
+  /// ターン毎の貿易収入を計算
+  int calculateTradeIncome(String provinceId) {
+    return getProvinceTradeRoutes(provinceId)
+        .where((route) => route.sourceProvinceId == provinceId)
+        .fold(0, (sum, route) => sum + route.goldPerTurn);
+  }
+
+  /// 外交行動の成功率を計算
+  double calculateSuccessRate(Faction faction1, Faction faction2, DiplomaticAction action) {
+    final currentRelation = getRelation(faction1, faction2);
+    final baseRate = 0.3; // 基本成功率30%
+
+    // 関係値による修正
+    final relationModifier = (currentRelation + 100) / 200; // 0.0～1.0
+
+    // 行動による修正
+    double actionModifier = 1.0;
+    switch (action) {
+      case DiplomaticAction.requestAlliance:
+        actionModifier = currentRelation >= 50 ? 1.5 : 0.5;
+        break;
+      case DiplomaticAction.declarePeace:
+        actionModifier = 1.2;
+        break;
+      case DiplomaticAction.requestTrade:
+        actionModifier = currentRelation >= 0 ? 1.3 : 0.7;
+        break;
+      case DiplomaticAction.sendGift:
+        actionModifier = 1.8;
+        break;
+      case DiplomaticAction.demandTribute:
+        actionModifier = currentRelation >= 50 ? 0.8 : 0.3;
+        break;
+      case DiplomaticAction.threaten:
+        actionModifier = 0.6;
+        break;
     }
 
-    final newState = currentState.copyWith(
-      relation: DiplomaticRelation.neutral,
-      trustLevel: (currentState.trustLevel + 5).clamp(0, 100),
-      lastInteraction: DateTime.now(),
-    );
+    return (baseRate * relationModifier * actionModifier).clamp(0.05, 0.95);
+  }
 
-    updateRelation(faction, newState);
-
-    return DiplomaticResult(
-      success: true,
-      message: '${faction.displayName}との停戦が成立しました',
-      newRelation: DiplomaticRelation.neutral,
-      trustChange: 5,
+  /// コピーウィズ
+  DiplomacySystem copyWith({
+    Map<String, int>? relations,
+    List<Treaty>? treaties,
+    List<TradeRoute>? tradeRoutes,
+  }) {
+    return DiplomacySystem(
+      relations: relations ?? this.relations,
+      treaties: treaties ?? this.treaties,
+      tradeRoutes: tradeRoutes ?? this.tradeRoutes,
     );
   }
 
-  /// 宣戦布告の処理
-  DiplomaticResult _handleWarDeclaration(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    final newState = currentState.copyWith(
-      relation: DiplomaticRelation.war,
-      trustLevel: (currentState.trustLevel - 20).clamp(0, 100),
-      lastInteraction: DateTime.now(),
-    );
+  /// JSON変換
+  Map<String, dynamic> toJson() {
+    return {
+      'relations': relations,
+      'treaties': treaties.map((t) => t.toJson()).toList(),
+      'tradeRoutes': tradeRoutes.map((r) => r.toJson()).toList(),
+    };
+  }
 
-    updateRelation(faction, newState);
-
-    return DiplomaticResult(
-      success: true,
-      message: '${faction.displayName}に宣戦布告しました',
-      newRelation: DiplomaticRelation.war,
-      trustChange: -20,
+  /// JSONから作成
+  factory DiplomacySystem.fromJson(Map<String, dynamic> json) {
+    return DiplomacySystem(
+      relations: Map<String, int>.from(json['relations'] ?? {}),
+      treaties: (json['treaties'] as List? ?? []).map((t) => Treaty.fromJson(t)).toList(),
+      tradeRoutes: (json['tradeRoutes'] as List? ?? []).map((r) => TradeRoute.fromJson(r)).toList(),
     );
   }
 
-  /// 貿易要請の処理
-  DiplomaticResult _handleTradeRequest(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    if (currentState.relation == DiplomaticRelation.war) {
-      return const DiplomaticResult(
-        success: false,
-        message: '戦争中の勢力とは貿易できません',
-      );
-    }
+  /// デフォルトの外交関係で初期化
+  factory DiplomacySystem.withDefaults() {
+    final Map<String, int> defaultRelations = {
+      '${Faction.liangshan.name}-${Faction.imperial.name}': -80,
+      '${Faction.liangshan.name}-${Faction.warlord.name}': -20,
+      '${Faction.liangshan.name}-${Faction.bandit.name}': 20,
+      '${Faction.liangshan.name}-${Faction.neutral.name}': 0,
+      '${Faction.imperial.name}-${Faction.warlord.name}': 40,
+      '${Faction.imperial.name}-${Faction.bandit.name}': -90,
+      '${Faction.imperial.name}-${Faction.neutral.name}': 10,
+      '${Faction.warlord.name}-${Faction.bandit.name}': -30,
+      '${Faction.warlord.name}-${Faction.neutral.name}': 0,
+      '${Faction.bandit.name}-${Faction.neutral.name}': -10,
+    };
 
-    final success = currentState.trustLevel >= 40;
-    if (success) {
-      final newState = currentState.copyWith(
-        trustLevel: (currentState.trustLevel + 5).clamp(0, 100),
-        lastInteraction: DateTime.now(),
-      );
-      updateRelation(faction, newState);
-    }
-
-    return DiplomaticResult(
-      success: success,
-      message: success 
-          ? '${faction.displayName}との貿易協定が成立しました'
-          : '貿易協定は拒否されました',
-      trustChange: success ? 5 : 0,
-    );
+    return DiplomacySystem(relations: defaultRelations);
   }
-
-  /// 貢ぎ物要求の処理
-  DiplomaticResult _handleTributeDemand(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    final success = currentState.trustLevel <= 30 && 
-                   currentState.relation != DiplomaticRelation.ally;
-    
-    if (success) {
-      final newState = currentState.copyWith(
-        trustLevel: (currentState.trustLevel - 10).clamp(0, 100),
-        lastInteraction: DateTime.now(),
-      );
-      updateRelation(faction, newState);
-    }
-
-    return DiplomaticResult(
-      success: success,
-      message: success
-          ? '${faction.displayName}が貢ぎ物を送ってきました'
-          : '貢ぎ物の要求は拒否されました',
-      trustChange: success ? -10 : 0,
-    );
-  }
-
-  /// 貢ぎ物提供の処理
-  DiplomaticResult _handleTributeOffer(
-    Faction faction,
-    DiplomaticState currentState,
-  ) {
-    final newState = currentState.copyWith(
-      trustLevel: (currentState.trustLevel + 15).clamp(0, 100),
-      lastInteraction: DateTime.now(),
-    );
-
-    updateRelation(faction, newState);
-
-    return DiplomaticResult(
-      success: true,
-      message: '${faction.displayName}への贈り物が好感を持たれました',
-      trustChange: 15,
-    );
-  }
-
-  /// 全ての外交関係を取得
-  Map<Faction, DiplomaticState> get allRelationships => 
-      Map.unmodifiable(_relationships);
-
-  /// 同盟国の一覧を取得
-  List<Faction> get allies => _relationships.entries
-      .where((entry) => entry.value.relation == DiplomaticRelation.ally)
-      .map((entry) => entry.key)
-      .toList();
-
-  /// 敵対勢力の一覧を取得
-  List<Faction> get enemies => _relationships.entries
-      .where((entry) => entry.value.relation == DiplomaticRelation.war)
-      .map((entry) => entry.key)
-      .toList();
 }
