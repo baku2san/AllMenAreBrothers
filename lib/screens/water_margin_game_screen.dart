@@ -237,6 +237,7 @@ class _WaterMarginGameView extends StatelessWidget {
                           ? ProvinceDetailPanel(
                               province: controller.selectedProvince!,
                               gameState: controller.gameState,
+                              controller: controller,
                             )
                           : const Center(
                               child: Text(

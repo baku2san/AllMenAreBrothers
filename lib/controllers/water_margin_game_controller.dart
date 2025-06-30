@@ -2,6 +2,7 @@
 /// フェーズ1: 基本的なゲーム状態管理とUI操作
 library;
 
+import 'dart:math';
 import 'package:flutter/material.dart' hide Hero;
 
 import '../data/water_margin_map.dart';
@@ -164,6 +165,91 @@ class WaterMarginGameController extends ChangeNotifier {
       provinces: updatedProvinces,
       playerGold: _gameState.playerGold - cost,
     );
+
+    notifyListeners();
+  }
+
+  /// 徴兵
+  void recruitTroops(String provinceId, int amount) {
+    final province = _gameState.provinces[provinceId];
+    if (province == null || province.controller != Faction.liangshan) return;
+
+    final cost = amount * AppConstants.recruitmentCostPerTroop; // 兵士1人につき10両
+    if (_gameState.playerGold < cost) {
+      _addEventLog('徴兵に必要な資金が不足しています');
+      return;
+    }
+
+    final maxRecruits = province.state.maxTroops - province.currentTroops;
+    final actualAmount = amount > maxRecruits ? maxRecruits : amount;
+
+    if (actualAmount <= 0) {
+      _addEventLog('${province.name}では兵力が上限に達しています');
+      return;
+    }
+
+    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
+    updatedProvinces[provinceId] = province.copyWith(
+      currentTroops: province.currentTroops + actualAmount,
+    );
+
+    _gameState = _gameState.copyWith(
+      provinces: updatedProvinces,
+      playerGold: (_gameState.playerGold - (actualAmount * AppConstants.recruitmentCostPerTroop)).toInt(),
+    );
+
+    _addEventLog('${province.name}で$actualAmount人の兵士を徴兵しました');
+    notifyListeners();
+  }
+
+  /// 英雄派遣（簡易版）
+  void assignHeroToProvince(String heroId, String provinceId) {
+    final hero = _gameState.heroes.firstWhere(
+      (h) => h.id == heroId, 
+      orElse: () => throw ArgumentError('Hero not found: $heroId'),
+    );
+    final province = _gameState.provinces[provinceId];
+    
+    if (province == null || province.controller != Faction.liangshan) return;
+
+    final updatedHeroes = _gameState.heroes.map((h) => 
+      h.id == heroId ? h.copyWith(currentProvinceId: provinceId) : h
+    ).toList();
+
+    _gameState = _gameState.copyWith(heroes: updatedHeroes);
+    _addEventLog('${hero.name}を${province.name}に派遣しました');
+    notifyListeners();
+  }
+
+  /// 交渉（簡易版）
+  void negotiateWithProvince(String provinceId, String negotiationType) {
+    final province = _gameState.provinces[provinceId];
+    if (province == null || province.controller == Faction.liangshan) return;
+
+    final cost = 200; // 交渉費用
+    if (_gameState.playerGold < cost) {
+      _addEventLog('交渉に必要な資金が不足しています');
+      return;
+    }
+
+    final success = Random().nextDouble() < 0.3; // 30%の成功率
+
+    _gameState = _gameState.copyWith(
+      playerGold: _gameState.playerGold - cost,
+    );
+
+    if (success) {
+      if (negotiationType == 'peace') {
+        _addEventLog('${province.name}との和平交渉が成功しました');
+      } else if (negotiationType == 'trade') {
+        _gameState = _gameState.copyWith(
+          playerGold: _gameState.playerGold + 300, // 貿易利益
+        );
+        _addEventLog('${province.name}との貿易交渉が成功し、300両を獲得しました');
+      }
+    } else {
+      _addEventLog('${province.name}との交渉は失敗しました');
+    }
 
     notifyListeners();
   }

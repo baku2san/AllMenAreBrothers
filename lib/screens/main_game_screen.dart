@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../widgets/game_map_widget.dart';
 import '../widgets/game_info_panel.dart';
-import '../widgets/province_detail_panel.dart';
 import '../services/strategy_game_service.dart';
 
 /// メインゲーム画面
@@ -94,10 +93,16 @@ class _MainGameScreenState extends State<MainGameScreen> {
                 
                 // 選択された州の詳細パネル
                 if (_gameState.selectedProvince != null)
-                  Expanded(
-                    child: ProvinceDetailPanel(
-                      province: _gameState.selectedProvince!,
-                      gameState: _gameState,
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'このファイルは使用されていません\nwater_margin_game_screen.dartを使用してください',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
               ],
