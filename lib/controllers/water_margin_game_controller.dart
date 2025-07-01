@@ -14,6 +14,7 @@ import '../models/game_difficulty.dart';
 import '../services/game_save_service.dart';
 import '../core/app_config.dart';
 import '../utils/app_utils.dart';
+import '../widgets/toast_notification.dart';
 
 /// 水滸伝戦略ゲームのメインコントローラー
 class WaterMarginGameController extends ChangeNotifier {
@@ -30,14 +31,28 @@ class WaterMarginGameController extends ChangeNotifier {
     gameStatus: GameStatus.playing,
   );
 
-  /// イベントログ
+  /// イベントログ（表示用の一時的なログ）
   List<String> _eventLog = [];
+
+  /// イベント履歴（永続的な全履歴）
+  List<String> _eventHistory = [];
+
+  /// トースト通知用のBuildContext（画面から設定される）
+  BuildContext? _context;
 
   /// 現在のゲーム状態を取得
   WaterMarginGameState get gameState => _gameState;
 
   /// イベントログを取得
   List<String> get eventLog => List.unmodifiable(_eventLog);
+
+  /// イベント履歴を取得
+  List<String> get eventHistory => List.unmodifiable(_eventHistory);
+
+  /// BuildContextを設定（画面から呼び出される）
+  void setContext(BuildContext context) {
+    _context = context;
+  }
 
   /// 選択された州のIDを取得
   String? get selectedProvinceId => _gameState.selectedProvinceId;
@@ -156,7 +171,7 @@ class WaterMarginGameController extends ChangeNotifier {
     // 難易度に応じたコスト計算
     final cost = _difficultySettings?.getDevelopmentCost() ?? AppConstants.developmentCost;
     if (_gameState.playerGold < cost) {
-      _addEventLog('資金が不足しています（必要: $cost両）');
+      _addEventLog('資金が不足しています（必要: $cost両）', toastType: ToastType.error);
       return;
     }
 
@@ -168,25 +183,25 @@ class WaterMarginGameController extends ChangeNotifier {
         newState = newState.copyWith(
           agriculture: NumberUtils.clampInt(newState.agriculture + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の農業を発展させました（コスト: $cost両）');
+        _addEventLog('${province.name}の農業を発展させました（コスト: $cost両）', toastType: ToastType.success);
         break;
       case DevelopmentType.commerce:
         newState = newState.copyWith(
           commerce: NumberUtils.clampInt(newState.commerce + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の商業を発展させました（コスト: $cost両）');
+        _addEventLog('${province.name}の商業を発展させました（コスト: $cost両）', toastType: ToastType.success);
         break;
       case DevelopmentType.military:
         newState = newState.copyWith(
           military: NumberUtils.clampInt(newState.military + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の軍事を強化しました（コスト: $cost両）');
+        _addEventLog('${province.name}の軍事を強化しました（コスト: $cost両）', toastType: ToastType.success);
         break;
       case DevelopmentType.security:
         newState = newState.copyWith(
           security: NumberUtils.clampInt(newState.security + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の治安を改善しました（コスト: $cost両）');
+        _addEventLog('${province.name}の治安を改善しました（コスト: $cost両）', toastType: ToastType.success);
         break;
     }
 
@@ -207,7 +222,7 @@ class WaterMarginGameController extends ChangeNotifier {
 
     final cost = amount * AppConstants.recruitmentCostPerTroop; // 兵士1人につき10両
     if (_gameState.playerGold < cost) {
-      _addEventLog('徴兵に必要な資金が不足しています');
+      _addEventLog('徴兵に必要な資金が不足しています', toastType: ToastType.error);
       return;
     }
 
@@ -215,7 +230,7 @@ class WaterMarginGameController extends ChangeNotifier {
     final actualAmount = amount > maxRecruits ? maxRecruits : amount;
 
     if (actualAmount <= 0) {
-      _addEventLog('${province.name}では兵力が上限に達しています');
+      _addEventLog('${province.name}では兵力が上限に達しています', toastType: ToastType.warning);
       return;
     }
 
@@ -554,13 +569,41 @@ class WaterMarginGameController extends ChangeNotifier {
   }
 
   /// イベントログに追加
-  void _addEventLog(String message) {
-    _eventLog.insert(0, 'ターン${_gameState.currentTurn}: $message');
+  void _addEventLog(String message, {ToastType toastType = ToastType.info}) {
+    final formattedMessage = 'ターン${_gameState.currentTurn}: $message';
+
+    // 一時的なログ（画面表示用、すぐに削除されない）
+    _eventLog.insert(0, formattedMessage);
     // 最大20件まで保持
     if (_eventLog.length > AppConstants.maxEventLogEntries) {
       _eventLog = _eventLog.take(AppConstants.maxEventLogEntries).toList();
     }
+
+    // 永続的な履歴（全履歴を保持）
+    _eventHistory.add(formattedMessage);
+
+    // トースト通知を表示
+    if (_context != null) {
+      ToastNotificationManager.showNotification(
+        _context!,
+        message: message,
+        type: toastType,
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
+
+  /// トースト通知のみを表示（履歴に残さない、将来の拡張用）
+  // void _showToastOnly(String message, {ToastType toastType = ToastType.info}) {
+  //   if (_context != null) {
+  //     ToastNotificationManager.showNotification(
+  //       _context!,
+  //       message: message,
+  //       type: toastType,
+  //       duration: const Duration(seconds: 2),
+  //     );
+  //   }
+  // }
 
   /// 州にいる英雄を取得
   List<Hero> _getHeroesInProvince(String provinceId) {

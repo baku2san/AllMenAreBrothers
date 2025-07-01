@@ -150,6 +150,9 @@ class _WaterMarginGameView extends StatelessWidget {
           final theme = Theme.of(context);
           final colorScheme = theme.colorScheme;
 
+          // コントローラーにcontextを設定（トースト通知用）
+          controller.setContext(context);
+
           // 戦闘結果ダイアログの自動表示
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (controller.lastBattleResult != null) {
@@ -238,21 +241,15 @@ class _WaterMarginGameView extends StatelessWidget {
                               decoration: ModernDecorations.primaryContainer(colorScheme),
                               child: GameInfoPanel(
                                 gameState: controller.gameState,
-                                onEndTurn: controller.endTurn,
+                                eventHistory: controller.eventHistory,
                               ),
                             ),
 
                             // 州詳細パネル（改良版）
                             Expanded(
-                              flex: 2,
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: colorScheme.surface,
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: colorScheme.outline.withValues(alpha: 0.2),
-                                    ),
-                                  ),
                                 ),
                                 child: controller.selectedProvince != null
                                     ? ProvinceDetailPanel(
@@ -286,69 +283,6 @@ class _WaterMarginGameView extends StatelessWidget {
                                           ],
                                         ),
                                       ),
-                              ),
-                            ),
-
-                            // イベントログ（改良版）
-                            Expanded(
-                              flex: 1,
-                              child: Column(
-                                children: [
-                                  Container(
-                                    padding: ModernSpacing.paddingMD,
-                                    decoration: ModernDecorations.secondaryContainer(colorScheme),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: ModernSpacing.paddingXS,
-                                          decoration: BoxDecoration(
-                                            color: colorScheme.secondary,
-                                            borderRadius: ModernRadius.smRadius,
-                                          ),
-                                          child: Icon(
-                                            Icons.history_rounded,
-                                            color: colorScheme.onSecondary,
-                                            size: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'イベントログ',
-                                          style: AppTextStyles.titleSmall.copyWith(
-                                            color: colorScheme.onSecondaryContainer,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      reverse: true,
-                                      padding: ModernSpacing.paddingXS,
-                                      itemCount: controller.eventLog.length,
-                                      itemBuilder: (context, index) {
-                                        final event = controller.eventLog[controller.eventLog.length - 1 - index];
-                                        return Container(
-                                          margin: const EdgeInsets.only(bottom: 2),
-                                          padding: ModernSpacing.paddingMD,
-                                          decoration: BoxDecoration(
-                                            color: index % 2 == 0
-                                                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-                                                : colorScheme.surface,
-                                            borderRadius: ModernRadius.smRadius,
-                                          ),
-                                          child: Text(
-                                            event,
-                                            style: AppTextStyles.bodySmall.copyWith(
-                                              color: colorScheme.onSurface,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ],

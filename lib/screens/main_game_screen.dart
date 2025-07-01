@@ -88,7 +88,7 @@ class _MainGameScreenState extends State<MainGameScreen> {
                 // ゲーム情報パネル
                 GameInfoPanel(
                   gameState: _gameState,
-                  onEndTurn: _onEndTurn,
+                  eventHistory: const [], // main_game_screen.dartは使用されていないため空リスト
                 ),
 
                 // 選択された州の詳細パネル

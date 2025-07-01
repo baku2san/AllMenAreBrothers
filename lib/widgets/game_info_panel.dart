@@ -5,17 +5,18 @@ library;
 import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../core/app_config.dart';
+import '../widgets/event_history_dialog.dart';
 
 /// ゲーム情報パネル
 class GameInfoPanel extends StatelessWidget {
   const GameInfoPanel({
     super.key,
     required this.gameState,
-    required this.onEndTurn,
+    required this.eventHistory,
   });
 
   final WaterMarginGameState gameState;
-  final VoidCallback onEndTurn;
+  final List<String> eventHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +38,40 @@ class GameInfoPanel extends StatelessWidget {
                   size: 24,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '梁山泊情勢',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '梁山泊情勢',
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // イベント履歴ボタン
+                      GestureDetector(
+                        onTap: () => _showEventHistory(context),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.history_rounded,
+                              size: 14,
+                              color: colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'イベント履歴を見る',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: colorScheme.primary.withValues(alpha: 0.7),
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -59,28 +89,6 @@ class GameInfoPanel extends StatelessWidget {
             ]),
 
             const SizedBox(height: 16),
-
-            // ターン終了ボタン
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onEndTurn,
-                icon: const Icon(Icons.navigate_next_rounded),
-                label: Text(
-                  'ターン終了',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
 
             // ゲーム状況の簡易表示
             Container(
@@ -191,5 +199,15 @@ class GameInfoPanel extends StatelessWidget {
     } else {
       return '梁山泊が天下の大半を支配しています。統一は目前です！';
     }
+  }
+
+  /// イベント履歴ダイアログを表示
+  void _showEventHistory(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => EventHistoryDialog(
+        eventHistory: eventHistory,
+      ),
+    );
   }
 }
