@@ -10,6 +10,8 @@ import '../widgets/game_info_panel.dart';
 import '../widgets/province_detail_panel.dart';
 import '../widgets/battle_result_dialog.dart';
 import '../widgets/game_command_bar.dart';
+import '../widgets/difficulty_selection_dialog.dart';
+import '../widgets/tutorial_hint_panel.dart';
 import '../core/app_config.dart';
 import '../core/app_theme.dart';
 
@@ -20,9 +22,27 @@ class WaterMarginGameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => WaterMarginGameController()..initializeGame(),
+      create: (context) {
+        final controller = WaterMarginGameController();
+        // 難易度選択ダイアログを表示
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showDifficultySelection(context, controller);
+        });
+        return controller;
+      },
       child: const _WaterMarginGameView(),
     );
+  }
+
+  /// 難易度選択ダイアログを表示
+  Future<void> _showDifficultySelection(BuildContext context, WaterMarginGameController controller) async {
+    final selectedDifficulty = await showDifficultySelectionDialog(context);
+    if (selectedDifficulty != null) {
+      controller.initializeGameWithDifficulty(selectedDifficulty);
+    } else {
+      // キャンセルされた場合は標準難易度
+      controller.initializeGame();
+    }
   }
 }
 
@@ -139,198 +159,211 @@ class _WaterMarginGameView extends StatelessWidget {
 
           return Container(
             decoration: ModernDecorations.surfaceBackground(colorScheme),
-            child: Row(
+            child: Stack(
               children: [
-                // メインマップ領域
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    children: [
-                      // マップ
-                      Expanded(
+                Row(
+                  children: [
+                    // メインマップ領域
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          // マップ
+                          Expanded(
+                            child: Column(
+                              children: [
+                                // マップ表示
+                                Expanded(
+                                  child: Container(
+                                    margin: ModernSpacing.paddingMD,
+                                    decoration: ModernDecorations.elevatedCard(colorScheme),
+                                    child: ClipRRect(
+                                      borderRadius: ModernRadius.mdRadius,
+                                      child: GameMapWidget(
+                                        gameState: controller.gameState,
+                                        onProvinceSelected: controller.selectProvince,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // マップ凡例（より洗練されたデザイン）
+                                if (controller.selectedProvince != null)
+                                  Container(
+                                    margin: EdgeInsets.fromLTRB(
+                                      ModernSpacing.md,
+                                      0,
+                                      ModernSpacing.md,
+                                      ModernSpacing.md,
+                                    ),
+                                    decoration: ModernDecorations.card(colorScheme),
+                                    child: Padding(
+                                      padding: ModernSpacing.paddingMD,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          _buildLegendItem(
+                                              '選択中', AppColors.accentGold, Icons.location_on_rounded, colorScheme),
+                                          _buildLegendItem(
+                                              '隣接州', colorScheme.tertiary, Icons.link_rounded, colorScheme),
+                                          _buildLegendItem(
+                                              '攻撃可能', colorScheme.error, Icons.gps_fixed_rounded, colorScheme),
+                                          _buildLegendItem('味方州', colorScheme.primary, Icons.flag_rounded, colorScheme),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          // 統一コマンドバー
+                          const GameCommandBar(),
+                        ],
+                      ),
+                    ),
+
+                    // サイドバー（モダンデザイン）
+                    Container(
+                      width: AppConstants.sidebarWidth,
+                      margin: ModernSpacing.paddingMD,
+                      decoration: ModernDecorations.elevatedCard(colorScheme),
+                      child: ClipRRect(
+                        borderRadius: ModernRadius.mdRadius,
                         child: Column(
                           children: [
-                            // マップ表示
+                            // ゲーム情報パネル（改良版）
+                            Container(
+                              height: 200,
+                              decoration: ModernDecorations.primaryContainer(colorScheme),
+                              child: GameInfoPanel(
+                                gameState: controller.gameState,
+                                onEndTurn: controller.endTurn,
+                              ),
+                            ),
+
+                            // 州詳細パネル（改良版）
                             Expanded(
+                              flex: 2,
                               child: Container(
-                                margin: ModernSpacing.paddingMD,
-                                decoration: ModernDecorations.elevatedCard(colorScheme),
-                                child: ClipRRect(
-                                  borderRadius: ModernRadius.mdRadius,
-                                  child: GameMapWidget(
-                                    gameState: controller.gameState,
-                                    onProvinceSelected: controller.selectProvince,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surface,
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: colorScheme.outline.withValues(alpha: 0.2),
+                                    ),
                                   ),
                                 ),
+                                child: controller.selectedProvince != null
+                                    ? ProvinceDetailPanel(
+                                        province: controller.selectedProvince!,
+                                        gameState: controller.gameState,
+                                        controller: controller,
+                                      )
+                                    : Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              padding: ModernSpacing.paddingXL,
+                                              decoration: BoxDecoration(
+                                                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.touch_app_rounded,
+                                                size: 48,
+                                                color: colorScheme.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              '州を選択してください',
+                                              style: AppTextStyles.bodyLarge.copyWith(
+                                                color: colorScheme.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                               ),
                             ),
 
-                            // マップ凡例（より洗練されたデザイン）
-                            if (controller.selectedProvince != null)
-                              Container(
-                                margin: EdgeInsets.fromLTRB(
-                                  ModernSpacing.md,
-                                  0,
-                                  ModernSpacing.md,
-                                  ModernSpacing.md,
-                                ),
-                                decoration: ModernDecorations.card(colorScheme),
-                                child: Padding(
-                                  padding: ModernSpacing.paddingMD,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _buildLegendItem(
-                                          '選択中', AppColors.accentGold, Icons.location_on_rounded, colorScheme),
-                                      _buildLegendItem('隣接州', colorScheme.tertiary, Icons.link_rounded, colorScheme),
-                                      _buildLegendItem('攻撃可能', colorScheme.error, Icons.gps_fixed_rounded, colorScheme),
-                                      _buildLegendItem('味方州', colorScheme.primary, Icons.flag_rounded, colorScheme),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      // 統一コマンドバー
-                      const GameCommandBar(),
-                    ],
-                  ),
-                ),
-
-                // サイドバー（モダンデザイン）
-                Container(
-                  width: AppConstants.sidebarWidth,
-                  margin: ModernSpacing.paddingMD,
-                  decoration: ModernDecorations.elevatedCard(colorScheme),
-                  child: ClipRRect(
-                    borderRadius: ModernRadius.mdRadius,
-                    child: Column(
-                      children: [
-                        // ゲーム情報パネル（改良版）
-                        Container(
-                          height: 200,
-                          decoration: ModernDecorations.primaryContainer(colorScheme),
-                          child: GameInfoPanel(
-                            gameState: controller.gameState,
-                            onEndTurn: controller.endTurn,
-                          ),
-                        ),
-
-                        // 州詳細パネル（改良版）
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.surface,
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: colorScheme.outline.withValues(alpha: 0.2),
-                                ),
-                              ),
-                            ),
-                            child: controller.selectedProvince != null
-                                ? ProvinceDetailPanel(
-                                    province: controller.selectedProvince!,
-                                    gameState: controller.gameState,
-                                    controller: controller,
-                                  )
-                                : Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                            // イベントログ（改良版）
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: ModernSpacing.paddingMD,
+                                    decoration: ModernDecorations.secondaryContainer(colorScheme),
+                                    child: Row(
                                       children: [
                                         Container(
-                                          padding: ModernSpacing.paddingXL,
+                                          padding: ModernSpacing.paddingXS,
                                           decoration: BoxDecoration(
-                                            color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                            shape: BoxShape.circle,
+                                            color: colorScheme.secondary,
+                                            borderRadius: ModernRadius.smRadius,
                                           ),
                                           child: Icon(
-                                            Icons.touch_app_rounded,
-                                            size: 48,
-                                            color: colorScheme.primary,
+                                            Icons.history_rounded,
+                                            color: colorScheme.onSecondary,
+                                            size: 16,
                                           ),
                                         ),
-                                        const SizedBox(height: 16),
+                                        const SizedBox(width: 8),
                                         Text(
-                                          '州を選択してください',
-                                          style: AppTextStyles.bodyLarge.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
+                                          'イベントログ',
+                                          style: AppTextStyles.titleSmall.copyWith(
+                                            color: colorScheme.onSecondaryContainer,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                          ),
-                        ),
-
-                        // イベントログ（改良版）
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: ModernSpacing.paddingMD,
-                                decoration: ModernDecorations.secondaryContainer(colorScheme),
-                                child: Row(
-                                  children: [
-                                    Container(
+                                  Expanded(
+                                    child: ListView.builder(
+                                      reverse: true,
                                       padding: ModernSpacing.paddingXS,
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.secondary,
-                                        borderRadius: ModernRadius.smRadius,
-                                      ),
-                                      child: Icon(
-                                        Icons.history_rounded,
-                                        color: colorScheme.onSecondary,
-                                        size: 16,
-                                      ),
+                                      itemCount: controller.eventLog.length,
+                                      itemBuilder: (context, index) {
+                                        final event = controller.eventLog[controller.eventLog.length - 1 - index];
+                                        return Container(
+                                          margin: const EdgeInsets.only(bottom: 2),
+                                          padding: ModernSpacing.paddingMD,
+                                          decoration: BoxDecoration(
+                                            color: index % 2 == 0
+                                                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                                                : colorScheme.surface,
+                                            borderRadius: ModernRadius.smRadius,
+                                          ),
+                                          child: Text(
+                                            event,
+                                            style: AppTextStyles.bodySmall.copyWith(
+                                              color: colorScheme.onSurface,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'イベントログ',
-                                      style: AppTextStyles.titleSmall.copyWith(
-                                        color: colorScheme.onSecondaryContainer,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              Expanded(
-                                child: ListView.builder(
-                                  reverse: true,
-                                  padding: ModernSpacing.paddingXS,
-                                  itemCount: controller.eventLog.length,
-                                  itemBuilder: (context, index) {
-                                    final event = controller.eventLog[controller.eventLog.length - 1 - index];
-                                    return Container(
-                                      margin: const EdgeInsets.only(bottom: 2),
-                                      padding: ModernSpacing.paddingMD,
-                                      decoration: BoxDecoration(
-                                        color: index % 2 == 0
-                                            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-                                            : colorScheme.surface,
-                                        borderRadius: ModernRadius.smRadius,
-                                      ),
-                                      child: Text(
-                                        event,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
+
+                // チュートリアル・ヒントパネル
+                if (controller.showTutorial)
+                  TutorialHintPanel(
+                    gameState: controller.gameState,
+                    onClose: controller.hideTutorial,
+                  ),
               ],
             ),
           );

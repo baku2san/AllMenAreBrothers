@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'diplomacy_system.dart';
+import 'game_difficulty.dart';
 
 /// 勢力（プレイヤー、朝廷、豪族など）
 enum Faction {
@@ -380,6 +381,8 @@ class WaterMarginGameState {
     this.selectedProvinceId,
     this.selectedHeroId,
     this.diplomacy,
+    this.difficulty,
+    this.triggeredEvents = const {},
   });
 
   final Map<String, Province> provinces; // Mapに変更してAIシステムと互換性を持つ
@@ -391,6 +394,8 @@ class WaterMarginGameState {
   final String? selectedProvinceId;
   final String? selectedHeroId;
   final DiplomacySystem? diplomacy; // 外交システム
+  final GameDifficulty? difficulty; // 難易度設定
+  final Set<String> triggeredEvents; // 発生済みイベント
 
   WaterMarginGameState copyWith({
     Map<String, Province>? provinces,
@@ -402,6 +407,8 @@ class WaterMarginGameState {
     String? selectedProvinceId,
     String? selectedHeroId,
     DiplomacySystem? diplomacy,
+    GameDifficulty? difficulty,
+    Set<String>? triggeredEvents,
   }) {
     return WaterMarginGameState(
       provinces: provinces ?? this.provinces,
@@ -413,6 +420,8 @@ class WaterMarginGameState {
       selectedProvinceId: selectedProvinceId ?? this.selectedProvinceId,
       selectedHeroId: selectedHeroId ?? this.selectedHeroId,
       diplomacy: diplomacy ?? this.diplomacy,
+      difficulty: difficulty ?? this.difficulty,
+      triggeredEvents: triggeredEvents ?? this.triggeredEvents,
     );
   }
 

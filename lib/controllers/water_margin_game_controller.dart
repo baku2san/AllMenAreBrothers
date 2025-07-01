@@ -10,6 +10,7 @@ import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../models/advanced_battle_system.dart';
 import '../models/diplomacy_system.dart';
+import '../models/game_difficulty.dart';
 import '../services/game_save_service.dart';
 import '../core/app_config.dart';
 import '../utils/app_utils.dart';
@@ -47,8 +48,20 @@ class WaterMarginGameController extends ChangeNotifier {
     return _gameState.provinces[_gameState.selectedProvinceId!];
   }
 
+  /// ゲームを初期化（難易度指定版）
+  void initializeGameWithDifficulty(GameDifficulty difficulty) {
+    _difficultySettings = GameDifficultySettings.forDifficulty(difficulty);
+    _initializeGameWithSettings(_difficultySettings!);
+  }
+
   /// ゲームを初期化
   void initializeGame() {
+    // 標準難易度で初期化
+    initializeGameWithDifficulty(GameDifficulty.normal);
+  }
+
+  /// 難易度設定でゲームを初期化（内部メソッド）
+  void _initializeGameWithSettings(GameDifficultySettings settings) {
     try {
       _gameState = WaterMarginGameState(
         provinces: WaterMarginMap.initialProvinces,
@@ -61,13 +74,23 @@ class WaterMarginGameController extends ChangeNotifier {
           'neutral': Faction.neutral,
         },
         currentTurn: 1,
-        playerGold: AppConstants.initialPlayerGold,
+        playerGold: settings.initialGold, // 難易度に応じた初期資金
         gameStatus: GameStatus.playing,
         diplomacy: DiplomacySystem.withDefaults(),
+        difficulty: settings.difficulty,
+        triggeredEvents: <String>{},
       );
 
       _eventLog.clear();
-      _addEventLog('新しいゲームを開始しました');
+      _addEventLog('新しいゲームを開始しました（難易度: ${settings.difficulty.displayName}）');
+      _addEventLog('初期資金: ${settings.initialGold}両');
+
+      // 難易度に応じたヒント表示
+      if (settings.difficulty == GameDifficulty.beginner) {
+        _addEventLog('💡 初心者モードでは資金と経験値にボーナスがあります');
+      } else if (settings.difficulty == GameDifficulty.expert) {
+        _addEventLog('⚠️ 達人モードは非常に困難です。慎重に進めてください');
+      }
 
       notifyListeners();
     } catch (e) {
@@ -77,8 +100,10 @@ class WaterMarginGameController extends ChangeNotifier {
         heroes: const [],
         factions: const {},
         currentTurn: 1,
-        playerGold: AppConstants.initialPlayerGold,
+        playerGold: settings.initialGold,
         gameStatus: GameStatus.playing,
+        difficulty: settings.difficulty,
+        triggeredEvents: <String>{},
       );
       _addEventLog('ゲームデータの読み込みに失敗しました');
       notifyListeners();
@@ -128,9 +153,10 @@ class WaterMarginGameController extends ChangeNotifier {
     final province = _gameState.provinces[provinceId];
     if (province == null || province.controller != Faction.liangshan) return;
 
-    const cost = AppConstants.developmentCost; // 開発コスト
+    // 難易度に応じたコスト計算
+    final cost = _difficultySettings?.getDevelopmentCost() ?? AppConstants.developmentCost;
     if (_gameState.playerGold < cost) {
-      _addEventLog('資金が不足しています');
+      _addEventLog('資金が不足しています（必要: $cost両）');
       return;
     }
 
@@ -142,25 +168,25 @@ class WaterMarginGameController extends ChangeNotifier {
         newState = newState.copyWith(
           agriculture: NumberUtils.clampInt(newState.agriculture + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の農業を発展させました');
+        _addEventLog('${province.name}の農業を発展させました（コスト: $cost両）');
         break;
       case DevelopmentType.commerce:
         newState = newState.copyWith(
           commerce: NumberUtils.clampInt(newState.commerce + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の商業を発展させました');
+        _addEventLog('${province.name}の商業を発展させました（コスト: $cost両）');
         break;
       case DevelopmentType.military:
         newState = newState.copyWith(
           military: NumberUtils.clampInt(newState.military + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の軍事を強化しました');
+        _addEventLog('${province.name}の軍事を強化しました（コスト: $cost両）');
         break;
       case DevelopmentType.security:
         newState = newState.copyWith(
           security: NumberUtils.clampInt(newState.security + 10, 0, AppConstants.maxDevelopmentLevel),
         );
-        _addEventLog('${province.name}の治安を改善しました');
+        _addEventLog('${province.name}の治安を改善しました（コスト: $cost両）');
         break;
     }
 
@@ -499,7 +525,7 @@ class WaterMarginGameController extends ChangeNotifier {
     return total;
   }
 
-  /// プレイヤーの総収入を取得
+  /// プレイヤーの総収入を取得（難易度調整込み）
   int getTotalIncome() {
     int total = 0;
     for (final province in _gameState.provinces.values) {
@@ -507,6 +533,18 @@ class WaterMarginGameController extends ChangeNotifier {
         total += province.state.taxIncome;
       }
     }
+
+    // 難易度に応じた収入調整
+    if (_difficultySettings != null) {
+      total = _difficultySettings!.calculateIncome(total);
+    }
+
+    // 動的バランス調整
+    final adjustment = GameBalanceHelper.calculateDynamicAdjustment(_gameState);
+    if (adjustment.hasAdjustments) {
+      total = (total * (1.0 + adjustment.incomeBonus)).round();
+    }
+
     return total;
   }
 
@@ -595,12 +633,30 @@ class WaterMarginGameController extends ChangeNotifier {
   // 最後の戦闘結果を保持（UIから参照するため）
   BattleResultInfo? _lastBattleResult;
 
+  /// 現在の難易度設定
+  GameDifficultySettings? _difficultySettings;
+
+  /// チュートリアル表示フラグ
+  bool _showTutorial = true;
+
   /// 最後の戦闘結果を取得
   BattleResultInfo? get lastBattleResult => _lastBattleResult;
+
+  /// 現在の難易度設定を取得
+  GameDifficultySettings? get difficultySettings => _difficultySettings;
+
+  /// チュートリアル表示フラグを取得
+  bool get showTutorial => _showTutorial && _gameState.currentTurn <= 5;
 
   /// 戦闘結果を消去
   void clearBattleResult() {
     _lastBattleResult = null;
+    notifyListeners();
+  }
+
+  /// チュートリアルを非表示にする
+  void hideTutorial() {
+    _showTutorial = false;
     notifyListeners();
   }
 
