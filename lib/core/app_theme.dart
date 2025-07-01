@@ -290,7 +290,7 @@ class ModernTheme {
       // InputDecoration テーマ
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceVariant.withValues(alpha: 0.4),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         border: OutlineInputBorder(
           borderRadius: ModernRadius.mdRadius,
           borderSide: BorderSide(
@@ -324,9 +324,9 @@ class ModernTheme {
 
       // Chip テーマ
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: colorScheme.primaryContainer,
-        disabledColor: colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        disabledColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         labelStyle: AppTextStyles.labelSmall,
         shape: RoundedRectangleBorder(
           borderRadius: ModernRadius.xlRadius,

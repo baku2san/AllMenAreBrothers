@@ -405,7 +405,7 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Single
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${hero.name}が${trainingType}を行いました！'),
+                  content: Text('${hero.name}が$trainingTypeを行いました！'),
                   backgroundColor: AppColors.success,
                 ),
               );

@@ -9,7 +9,7 @@ import '../widgets/game_map_widget.dart';
 import '../widgets/game_info_panel.dart';
 import '../widgets/province_detail_panel.dart';
 import '../widgets/battle_result_dialog.dart';
-import '../widgets/game_command_bar_modern.dart';
+import '../widgets/game_command_bar.dart';
 import '../core/app_config.dart';
 import '../core/app_theme.dart';
 
@@ -310,7 +310,7 @@ class _WaterMarginGameView extends StatelessWidget {
                                       padding: ModernSpacing.paddingMD,
                                       decoration: BoxDecoration(
                                         color: index % 2 == 0
-                                            ? colorScheme.surfaceVariant.withValues(alpha: 0.3)
+                                            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
                                             : colorScheme.surface,
                                         borderRadius: ModernRadius.smRadius,
                                       ),

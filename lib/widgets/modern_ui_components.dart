@@ -112,7 +112,7 @@ class ModernProgressBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final effectiveColor = color ?? colorScheme.primary;
-    final effectiveBackgroundColor = backgroundColor ?? colorScheme.surfaceVariant;
+    final effectiveBackgroundColor = backgroundColor ?? colorScheme.surfaceContainerHighest;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +204,7 @@ class ModernActionButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         backgroundColor: onPressed == null
-            ? colorScheme.surfaceVariant.withValues(alpha: 0.5)
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
             : (isPrimary
                 ? colorScheme.primary
                 : isDestructive

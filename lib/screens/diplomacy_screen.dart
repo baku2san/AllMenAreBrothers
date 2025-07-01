@@ -216,7 +216,7 @@ class DiplomacyScreen extends StatelessWidget {
         title: Text(treaty.type.displayName),
         subtitle: Text('相手: ${treaty.faction2.displayName}'),
         trailing: Text(
-          '残り${remainingTurns}ターン',
+          '残り$remainingTurnsターン',
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,

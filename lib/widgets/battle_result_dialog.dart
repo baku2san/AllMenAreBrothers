@@ -250,7 +250,7 @@ class BattleResultDialog extends StatelessWidget {
                   child: Text(
                     '• $event',
                     style: AppTextStyles.body.copyWith(
-                      color: AppColors.darkGold,
+                      color: AppColors.accentGold,
                     ),
                   ),
                 )),
