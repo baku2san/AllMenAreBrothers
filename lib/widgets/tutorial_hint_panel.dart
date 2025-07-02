@@ -136,9 +136,10 @@ class _TutorialHintPanelState extends State<TutorialHintPanel> with SingleTicker
               // コンテンツ
               if (_isExpanded)
                 Container(
+                  constraints: const BoxConstraints(maxHeight: 300), // 最大高さを制限
                   padding: ModernSpacing.paddingMD,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ListView(
+                    shrinkWrap: true,
                     children: [
                       ...tips.map((tip) => _buildTipItem(context, tip)),
                       const SizedBox(height: 8),

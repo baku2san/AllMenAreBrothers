@@ -46,161 +46,163 @@ class _DifficultySelectionDialogState extends State<DifficultySelectionDialog> {
           borderRadius: ModernRadius.mdRadius,
           gradient: ModernColors.primaryGradient,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ヘッダー
-            Row(
-              children: [
-                Icon(
-                  Icons.tune,
-                  color: colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '難易度選択',
-                  style: theme.textTheme.headlineSmall?.copyWith(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ヘッダー
+              Row(
+                children: [
+                  Icon(
+                    Icons.tune,
                     color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    size: 28,
                   ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    Icons.close,
-                    color: colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 12),
+                  Text(
+                    '難易度選択',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // 説明文
-            Text(
-              'ゲームの難易度を選択してください。\n後から変更することはできません。',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.close,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-            // 難易度一覧
-            ...GameDifficulty.values.map((difficulty) {
-              final settings = GameDifficultySettings.forDifficulty(difficulty);
-              final isSelected = _selectedDifficulty == difficulty;
+              // 説明文
+              Text(
+                'ゲームの難易度を選択してください。\n後から変更することはできません。',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedDifficulty = difficulty;
-                      });
-                    },
-                    borderRadius: ModernRadius.mdRadius,
-                    child: Container(
-                      padding: ModernSpacing.paddingXL,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.1)
-                            : colorScheme.surfaceContainerHighest,
-                        border: Border.all(
-                          color: isSelected ? colorScheme.primary : colorScheme.outline,
-                          width: isSelected ? 2 : 1,
+              // 難易度一覧
+              ...GameDifficulty.values.map((difficulty) {
+                final settings = GameDifficultySettings.forDifficulty(difficulty);
+                final isSelected = _selectedDifficulty == difficulty;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedDifficulty = difficulty;
+                        });
+                      },
+                      borderRadius: ModernRadius.mdRadius,
+                      child: Container(
+                        padding: ModernSpacing.paddingXL,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? colorScheme.primary.withValues(alpha: 0.1)
+                              : colorScheme.surfaceContainerHighest,
+                          border: Border.all(
+                            color: isSelected ? colorScheme.primary : colorScheme.outline,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          borderRadius: ModernRadius.mdRadius,
+                          boxShadow: isSelected ? ModernShadows.elevation2 : ModernShadows.elevation1,
                         ),
-                        borderRadius: ModernRadius.mdRadius,
-                        boxShadow: isSelected ? ModernShadows.elevation2 : ModernShadows.elevation1,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 難易度名とアイコン
-                          Row(
-                            children: [
-                              Icon(
-                                _getDifficultyIcon(difficulty),
-                                color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                difficulty.displayName,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: isSelected ? colorScheme.primary : colorScheme.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (isSelected) ...[
-                                const Spacer(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 難易度名とアイコン
+                            Row(
+                              children: [
                                 Icon(
-                                  Icons.check_circle,
-                                  color: colorScheme.primary,
+                                  _getDifficultyIcon(difficulty),
+                                  color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
                                   size: 24,
                                 ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  difficulty.displayName,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (isSelected) ...[
+                                  const Spacer(),
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          // 説明文
-                          Text(
-                            difficulty.description,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 8),
 
-                          // 設定詳細
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 8,
-                            children: [
-                              _buildSettingChip(context, '初期資金', '${settings.initialGold}両'),
-                              _buildSettingChip(context, '収入', '${(settings.incomeMultiplier * 100).round()}%'),
-                              _buildSettingChip(
-                                  context, '開発コスト', '${(settings.developmentCostMultiplier * 100).round()}%'),
-                              _buildSettingChip(context, 'AI積極性', '${(settings.aiAggressiveness * 100).round()}%'),
-                            ],
-                          ),
-                        ],
+                            // 説明文
+                            Text(
+                              difficulty.description,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // 設定詳細
+                            Wrap(
+                              spacing: 16,
+                              runSpacing: 8,
+                              children: [
+                                _buildSettingChip(context, '初期資金', '${settings.initialGold}両'),
+                                _buildSettingChip(context, '収入', '${(settings.incomeMultiplier * 100).round()}%'),
+                                _buildSettingChip(
+                                    context, '開発コスト', '${(settings.developmentCostMultiplier * 100).round()}%'),
+                                _buildSettingChip(context, 'AI積極性', '${(settings.aiAggressiveness * 100).round()}%'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // ボタン群
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('キャンセル'),
+              // ボタン群
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('キャンセル'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      widget.onDifficultySelected(_selectedDifficulty);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('この難易度で開始'),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        widget.onDifficultySelected(_selectedDifficulty);
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('この難易度で開始'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

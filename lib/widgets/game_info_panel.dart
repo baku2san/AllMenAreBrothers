@@ -188,7 +188,13 @@ class GameInfoPanel extends StatelessWidget {
   String _getGameStatusMessage() {
     final provinceCount = gameState.playerProvinceCount;
     final totalProvinces = gameState.provinces.length;
-    final progress = (provinceCount / totalProvinces * 100).round();
+
+    // ゼロ除算を防ぐ
+    if (totalProvinces == 0) {
+      return '州の情報が読み込まれていません。';
+    }
+
+    final progress = ((provinceCount / totalProvinces) * 100).round().clamp(0, 100);
 
     if (progress < 20) {
       return '梁山泊はまだ小さな勢力です。周辺州の攻略を目指しましょう。';

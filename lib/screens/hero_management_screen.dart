@@ -1,4 +1,5 @@
 /// 水滸伝戦略ゲーム - 英雄管理画面
+/// Material Design 3準拠のモダンなUI/UXで英雄の詳細管理を行う
 library;
 
 import 'package:flutter/material.dart' hide Hero;
@@ -7,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../controllers/water_margin_game_controller.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../core/app_config.dart';
-import '../utils/app_utils.dart';
 
 /// 英雄管理メイン画面
 class HeroManagementScreen extends StatefulWidget {
@@ -22,18 +22,25 @@ class HeroManagementScreen extends StatefulWidget {
   State<HeroManagementScreen> createState() => _HeroManagementScreenState();
 }
 
-class _HeroManagementScreenState extends State<HeroManagementScreen> with SingleTickerProviderStateMixin {
+class _HeroManagementScreenState extends State<HeroManagementScreen> with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _animationController = AnimationController(
+      duration: AppConstants.defaultAnimationDuration,
+      vsync: this,
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -111,7 +118,7 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Single
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: ColorUtils.getFactionColor(hero.faction),
+                  backgroundColor: _getFactionColor(hero.faction),
                   child: Text(
                     hero.nickname.substring(0, 1),
                     style: const TextStyle(
@@ -192,7 +199,7 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Single
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: ColorUtils.getFactionColor(hero.faction),
+                          backgroundColor: _getFactionColor(hero.faction),
                           child: Text(
                             hero.nickname.substring(0, 1),
                             style: const TextStyle(
@@ -458,6 +465,22 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Single
         return '外交官';
       case HeroSkill.scout:
         return '斥候';
+    }
+  }
+
+  /// 勢力色を取得
+  Color _getFactionColor(Faction faction) {
+    switch (faction) {
+      case Faction.liangshan:
+        return Colors.blue;
+      case Faction.imperial:
+        return Colors.red;
+      case Faction.warlord:
+        return Colors.purple;
+      case Faction.neutral:
+        return Colors.grey;
+      case Faction.bandit:
+        return Colors.orange;
     }
   }
 }

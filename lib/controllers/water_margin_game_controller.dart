@@ -2,7 +2,7 @@
 /// フェーズ1: 基本的なゲーム状態管理とUI操作
 library;
 
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Hero;
 
 import '../data/water_margin_map.dart';
@@ -286,7 +286,7 @@ class WaterMarginGameController extends ChangeNotifier {
 
     // 成功率計算
     final successRate = diplomacy.calculateSuccessRate(Faction.liangshan, targetFaction, action);
-    final success = Random().nextDouble() < successRate;
+    final success = math.Random().nextDouble() < successRate;
 
     // 資金消費
     _gameState = _gameState.copyWith(
@@ -355,9 +355,9 @@ class WaterMarginGameController extends ChangeNotifier {
         break;
 
       case DiplomaticAction.demandTribute:
-        final tribute = 200 + Random().nextInt(300);
+        final tribute = 200 + math.Random().nextInt(300);
         _gameState = _gameState.copyWith(
-          playerGold: _gameState.playerGold + tribute,
+          playerGold: (_gameState.playerGold + tribute).toInt(),
           diplomacy: updatedDiplomacy,
         );
         _addEventLog('${targetFaction.displayName}から$tribute両の貢ぎ物を受け取りました');
@@ -455,7 +455,7 @@ class WaterMarginGameController extends ChangeNotifier {
       return;
     }
 
-    final success = Random().nextDouble() < 0.3; // 30%の成功率
+    final success = math.Random().nextDouble() < 0.3; // 30%の成功率
 
     _gameState = _gameState.copyWith(
       playerGold: _gameState.playerGold - cost,
@@ -946,6 +946,111 @@ class WaterMarginGameController extends ChangeNotifier {
     );
 
     _addEventLog('${province.name}に兵糧$amount を補給しました（コスト: $cost 両）', toastType: ToastType.success);
+    notifyListeners();
+  }
+
+  /// 英雄移動
+  Future<void> transferHero(String heroId, String targetProvinceId) async {
+    final hero = _gameState.heroes.firstWhere(
+      (h) => h.id == heroId,
+      orElse: () => throw ArgumentError('英雄が見つかりません: $heroId'),
+    );
+
+    if (!hero.isRecruited) {
+      throw StateError('未登用の英雄は移動できません');
+    }
+
+    final targetProvince = _gameState.provinces[targetProvinceId];
+    if (targetProvince?.controller != Faction.liangshan) {
+      throw StateError('自分の支配下の州にのみ移動できます');
+    }
+
+    // 英雄の移動を実行
+    final updatedHero = hero.copyWith(currentProvinceId: targetProvinceId);
+    final updatedHeroes = _gameState.heroes.map((h) => h.id == heroId ? updatedHero : h).toList();
+
+    _gameState = _gameState.copyWith(heroes: updatedHeroes);
+    _addEventLog('${hero.name}を${targetProvince?.name ?? '不明'}に移動させました');
+    notifyListeners();
+  }
+
+  /// 英雄レベルアップ（経験値消費版）
+  Future<void> levelUpHero(String heroId) async {
+    final hero = _gameState.heroes.firstWhere(
+      (h) => h.id == heroId,
+      orElse: () => throw ArgumentError('英雄が見つかりません: $heroId'),
+    );
+
+    final currentLevel = (hero.experience / 100).floor() + 1;
+    final requiredExp = currentLevel * 100;
+
+    if (hero.experience < requiredExp) {
+      throw StateError('経験値が不足しています');
+    }
+
+    // ステータス成長（ランダム）
+    final random = math.Random();
+    int forceGrowth = 0, intGrowth = 0, charismaGrowth = 0, leadershipGrowth = 0;
+
+    switch (hero.skill) {
+      case HeroSkill.warrior:
+        forceGrowth = 2 + random.nextInt(4);
+        intGrowth = random.nextInt(3);
+        charismaGrowth = random.nextInt(2);
+        leadershipGrowth = 1 + random.nextInt(3);
+        break;
+      case HeroSkill.strategist:
+        forceGrowth = random.nextInt(2);
+        intGrowth = 2 + random.nextInt(4);
+        charismaGrowth = 1 + random.nextInt(2);
+        leadershipGrowth = 1 + random.nextInt(3);
+        break;
+      case HeroSkill.administrator:
+        forceGrowth = random.nextInt(2);
+        intGrowth = 1 + random.nextInt(3);
+        charismaGrowth = 2 + random.nextInt(4);
+        leadershipGrowth = 1 + random.nextInt(3);
+        break;
+      case HeroSkill.diplomat:
+        forceGrowth = random.nextInt(2);
+        intGrowth = 1 + random.nextInt(2);
+        charismaGrowth = 2 + random.nextInt(4);
+        leadershipGrowth = 1 + random.nextInt(3);
+        break;
+      case HeroSkill.scout:
+        forceGrowth = 1 + random.nextInt(3);
+        intGrowth = 1 + random.nextInt(3);
+        charismaGrowth = 1 + random.nextInt(3);
+        leadershipGrowth = 1 + random.nextInt(3);
+        break;
+    }
+
+    // 最大値チェック
+    final newStats = HeroStats(
+      force: math.min(100, hero.stats.force + forceGrowth),
+      intelligence: math.min(100, hero.stats.intelligence + intGrowth),
+      charisma: math.min(100, hero.stats.charisma + charismaGrowth),
+      leadership: math.min(100, hero.stats.leadership + leadershipGrowth),
+      loyalty: hero.stats.loyalty,
+    );
+
+    final updatedHero = hero.copyWith(
+      stats: newStats,
+      experience: hero.experience - requiredExp, // 経験値を消費
+    );
+
+    final updatedHeroes = _gameState.heroes.map((h) => h.id == heroId ? updatedHero : h).toList();
+
+    _gameState = _gameState.copyWith(heroes: updatedHeroes);
+
+    final newLevel = currentLevel + 1;
+    _addEventLog('🌟 ${hero.name}がレベル$newLevelに成長しました！');
+
+    final totalGrowth = forceGrowth + intGrowth + charismaGrowth + leadershipGrowth;
+    if (totalGrowth >= 10) {
+      _addEventLog('✨ ${hero.name}が素晴らしい成長を遂げました！');
+    }
+
     notifyListeners();
   }
 }
