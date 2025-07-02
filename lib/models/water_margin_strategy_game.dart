@@ -203,6 +203,7 @@ class ProvinceState {
     required this.security, // 治安
     required this.military, // 軍事力
     required this.loyalty, // 民心
+    this.food = 0, // 備蓄兵糧
   });
 
   final int population; // 人口（1-1000万人）
@@ -211,6 +212,7 @@ class ProvinceState {
   final int security; // 治安（1-100）
   final int military; // 軍事力（1-100）
   final int loyalty; // 民心（1-100、高いほど支持）
+  final int food; // 備蓄兵糧
 
   ProvinceState copyWith({
     int? population,
@@ -219,6 +221,7 @@ class ProvinceState {
     int? security,
     int? military,
     int? loyalty,
+    int? food,
   }) {
     return ProvinceState(
       population: population ?? this.population,
@@ -227,6 +230,7 @@ class ProvinceState {
       security: security ?? this.security,
       military: military ?? this.military,
       loyalty: loyalty ?? this.loyalty,
+      food: food ?? this.food,
     );
   }
 
@@ -236,11 +240,17 @@ class ProvinceState {
   /// 食料生産量（人口 x 農業度）
   int get foodProduction => ((population / 100) * agriculture).round();
 
+  /// 基本兵糧消費量計算用（1兵士あたり月間2兵糧）
+  int getFoodConsumption(int troops) => troops * 2;
+
+  /// 兵糧不足判定用（現在備蓄 < 2ヶ月分消費量）
+  bool isLowOnFood(int troops) => food < getFoodConsumption(troops) * 2;
+
   /// 税収（人口 x 商業度）
   int get taxIncome => ((population / 100) * commerce).round();
 
-  /// 兵力上限（人口 x 軍事力）
-  int get maxTroops => ((population / 50) * military).round();
+  /// 兵力上限（人口 x 軍事力 / 5、より現実的な計算）
+  int get maxTroops => ((population / 100) * (military + 20) / 3).round().clamp(50, 5000);
 
   /// JSON変換用のtoJsonメソッド
   Map<String, dynamic> toJson() {
@@ -251,6 +261,7 @@ class ProvinceState {
       'security': security,
       'military': military,
       'loyalty': loyalty,
+      'food': food,
     };
   }
 
@@ -263,6 +274,7 @@ class ProvinceState {
       security: json['security'] ?? 0,
       military: json['military'] ?? 0,
       loyalty: json['loyalty'] ?? 0,
+      food: json['food'] ?? 0,
     );
   }
 }
@@ -295,6 +307,21 @@ class Province {
 
   /// 隣接州のリスト（AIシステム互換性のため）
   List<String> get neighbors => adjacentProvinceIds;
+
+  /// 月間兵糧収支（生産 - 消費）
+  int get monthlyFoodBalance => state.foodProduction - state.getFoodConsumption(currentTroops);
+
+  /// 兵糧不足判定
+  bool get isLowOnFood => state.isLowOnFood(currentTroops);
+
+  /// 兵糧備蓄量
+  int get foodReserve => state.food;
+
+  /// 兵糧生産量
+  int get foodProduction => state.foodProduction;
+
+  /// 兵糧消費量
+  int get foodConsumption => state.getFoodConsumption(currentTroops);
 
   Province copyWith({
     String? id,

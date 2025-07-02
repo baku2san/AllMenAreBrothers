@@ -18,6 +18,7 @@ class AppConstants {
   static const int initialPlayerGold = 1000;
   static const int developmentCost = 200;
   static const int recruitmentCostPerTroop = 10;
+  static const int foodSupplyCost = 300; // 兵糧補給コスト
   static const int maxEventLogEntries = 20;
   static const int maxDevelopmentLevel = 100;
 

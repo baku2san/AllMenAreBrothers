@@ -39,13 +39,6 @@ class _MainGameScreenState extends State<MainGameScreen> {
     });
   }
 
-  /// ターン終了処理
-  void _onEndTurn() {
-    setState(() {
-      _gameState = _gameService.processTurn(_gameState);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

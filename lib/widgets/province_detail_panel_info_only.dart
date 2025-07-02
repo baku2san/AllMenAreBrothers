@@ -2,9 +2,10 @@
 /// 選択された州の詳細情報を表示（操作機能は下部コマンドバーに統一）
 library;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Hero;
 import '../models/water_margin_strategy_game.dart';
 import '../controllers/water_margin_game_controller.dart';
+import '../core/app_config.dart';
 import '../core/app_theme.dart';
 
 /// 州詳細パネル（情報表示専用）

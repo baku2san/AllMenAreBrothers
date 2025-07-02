@@ -284,6 +284,20 @@ class GameCommandBar extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
+            // 兵糧補給
+            _buildCommandButton(
+              context: context,
+              label: '兵糧補給',
+              icon: Icons.restaurant_rounded,
+              cost: '${AppConstants.foodSupplyCost}両',
+              tooltip: '兵糧を補給します（500単位）',
+              onPressed: gameState.playerGold >= AppConstants.foodSupplyCost &&
+                      selectedProvince.controller == Faction.liangshan
+                  ? () => controller.supplyFood(selectedProvince.id, 500)
+                  : null,
+            ),
+            const SizedBox(width: 8),
+
             // 攻撃
             if (_canAttackFrom(controller, selectedProvince))
               _buildCommandButton(

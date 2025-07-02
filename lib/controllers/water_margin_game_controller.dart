@@ -9,6 +9,7 @@ import '../data/water_margin_map.dart';
 import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../models/advanced_battle_system.dart';
+import '../models/improved_battle_system.dart';
 import '../models/diplomacy_system.dart';
 import '../models/game_difficulty.dart';
 import '../services/game_save_service.dart';
@@ -35,7 +36,7 @@ class WaterMarginGameController extends ChangeNotifier {
   List<String> _eventLog = [];
 
   /// イベント履歴（永続的な全履歴）
-  List<String> _eventHistory = [];
+  final List<String> _eventHistory = [];
 
   /// トースト通知用のBuildContext（画面から設定される）
   BuildContext? _context;
@@ -147,6 +148,9 @@ class WaterMarginGameController extends ChangeNotifier {
 
     // ターン処理
     final income = getTotalIncome();
+
+    // 兵糧処理（生産・消費・不足チェック）
+    _processFoodSystem();
 
     _gameState = _gameState.copyWith(
       currentTurn: _gameState.currentTurn + 1,
@@ -495,36 +499,32 @@ class WaterMarginGameController extends ChangeNotifier {
       return;
     }
 
+    // 兵糧チェック
+    if (sourceProvince.isLowOnFood) {
+      _addEventLog('警告: ${sourceProvince.name}の兵糧が不足しています。戦闘力が低下する可能性があります');
+    }
+
     _addEventLog('${sourceProvince.name}から${targetProvince.name}への攻撃を開始！');
 
-    // 高度な戦闘システムを使用
-    final attacker = BattleParticipant(
-      faction: sourceProvince.controller,
-      troops: sourceProvince.currentTroops,
-      heroes: _getHeroesInProvince(sourceProvince.id),
-      province: sourceProvince,
+    // 改良戦闘システムを使用
+    final attackerHeroes = _getHeroesInProvince(sourceProvince.id);
+    final defenderHeroes = _getHeroesInProvince(targetProvince.id);
+
+    final battleResult = ImprovedBattleSystem.executeBattle(
+      attackerProvince: sourceProvince,
+      defenderProvince: targetProvince,
+      attackerHeroes: attackerHeroes,
+      defenderHeroes: defenderHeroes,
+      isPlayerAttacker: true,
     );
 
-    final defender = BattleParticipant(
-      faction: targetProvince.controller,
-      troops: targetProvince.currentTroops,
-      heroes: _getHeroesInProvince(targetProvince.id),
-      province: targetProvince,
-    );
-
-    // 戦闘実行（地形と戦闘タイプは将来拡張予定）
-    final battleResult = AdvancedBattleSystem.conductBattle(
-      attacker: attacker,
-      defender: defender,
-      battleType: BattleType.fieldBattle,
-      terrain: BattleTerrain.plains,
-    );
-
-    _addEventLog('戦闘結果: ${battleResult.attackerWins ? "勝利" : "敗北"}');
-    _addEventLog('味方損失: ${battleResult.attackerLosses}, 敵損失: ${battleResult.defenderLosses}');
+    // 戦闘結果をログに記録
+    _addEventLog('戦闘結果: ${_getBattleResultDescription(battleResult.result)}');
+    _addEventLog(battleResult.battleDescription);
+    _addEventLog('味方損失: ${battleResult.attackerLosses}, 敌損失: ${battleResult.defenderLosses}');
 
     // 戦闘結果を反映
-    _applyBattleResult(battleResult, sourceProvince.id, targetProvince.id);
+    _applyImprovedBattleResult(battleResult, sourceProvince.id, targetProvince.id);
 
     notifyListeners();
   }
@@ -608,69 +608,6 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 州にいる英雄を取得
   List<Hero> _getHeroesInProvince(String provinceId) {
     return _gameState.heroes.where((hero) => hero.currentProvinceId == provinceId).toList();
-  }
-
-  /// 戦闘結果を適用
-  void _applyBattleResult(AdvancedBattleResult result, String sourceProvinceId, String targetProvinceId) {
-    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
-
-    // 攻撃側の損失を反映
-    final sourceProvince = updatedProvinces[sourceProvinceId]!;
-    updatedProvinces[sourceProvinceId] = sourceProvince.copyWith(
-      currentTroops: (sourceProvince.currentTroops - result.attackerLosses).clamp(0, 999999),
-    );
-
-    // 防御側の損失を反映
-    final targetProvince = updatedProvinces[targetProvinceId]!;
-    updatedProvinces[targetProvinceId] = targetProvince.copyWith(
-      currentTroops: (targetProvince.currentTroops - result.defenderLosses).clamp(0, 999999),
-      controller: result.territoryConquered ? sourceProvince.controller : targetProvince.controller,
-    );
-
-    // 英雄の経験値を更新
-    _applyHeroBattleExperience(result.heroResults);
-
-    _gameState = _gameState.copyWith(provinces: updatedProvinces);
-
-    // 戦闘結果をログに記録
-    if (result.territoryConquered) {
-      _addEventLog('${targetProvince.name}を占領しました！ 敵${result.defenderLosses}、味方${result.attackerLosses}の損失');
-    } else {
-      _addEventLog('${targetProvince.name}の攻略に失敗しました。敵${result.defenderLosses}、味方${result.attackerLosses}の損失');
-    }
-
-    // 特殊イベントをログに追加
-    for (final event in result.specialEvents) {
-      _addEventLog(event);
-    }
-
-    // 戦闘結果ダイアログを表示する準備（UIレイヤーから呼び出し）
-    _lastBattleResult = BattleResultInfo(
-      result: result,
-      sourceProvinceName: sourceProvince.name,
-      targetProvinceName: targetProvince.name,
-    );
-
-    notifyListeners();
-  }
-
-  /// 戦闘での英雄経験値を適用
-  void _applyHeroBattleExperience(List<HeroBattleResult> heroResults) {
-    for (final heroResult in heroResults) {
-      if (heroResult.hero.faction == Faction.liangshan) {
-        addHeroExperience(heroResult.hero.id, heroResult.experienceGained);
-
-        // 特別な戦績がある場合
-        if (heroResult.specialAchievement != null) {
-          _addEventLog('${heroResult.hero.name}: ${heroResult.specialAchievement}');
-        }
-
-        // 負傷判定
-        if (heroResult.isInjured) {
-          _addEventLog('${heroResult.hero.name}が負傷しました');
-        }
-      }
-    }
   }
 
   // 最後の戦闘結果を保持（UIから参照するため）
@@ -821,6 +758,195 @@ class WaterMarginGameController extends ChangeNotifier {
     }
 
     return skills;
+  }
+
+  /// 戦闘結果タイプの説明を取得
+  String _getBattleResultDescription(BattleResultType result) {
+    switch (result) {
+      case BattleResultType.victory:
+        return '勝利';
+      case BattleResultType.defeat:
+        return '敗北';
+      case BattleResultType.pyrrhicVictory:
+        return '辛勝';
+      case BattleResultType.tacticalRetreat:
+        return '戦術的撤退';
+      case BattleResultType.surrender:
+        return '降伏';
+      case BattleResultType.stalemate:
+        return '膠着状態';
+    }
+  }
+
+  /// 改良戦闘システムの結果を適用
+  void _applyImprovedBattleResult(DetailedBattleResult result, String sourceProvinceId, String targetProvinceId) {
+    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
+
+    // 攻撃側の損失を反映
+    final sourceProvince = updatedProvinces[sourceProvinceId]!;
+    final sourceNewTroops = (sourceProvince.currentTroops - result.attackerLosses).clamp(0, 999999);
+    updatedProvinces[sourceProvinceId] = sourceProvince.copyWith(
+      currentTroops: sourceNewTroops,
+    );
+
+    // 防御側の損失を反映
+    final targetProvince = updatedProvinces[targetProvinceId]!;
+    final targetNewTroops = (targetProvince.currentTroops - result.defenderLosses).clamp(0, 999999);
+    updatedProvinces[targetProvinceId] = targetProvince.copyWith(
+      currentTroops: targetNewTroops,
+      controller: result.territoryChanged ? sourceProvince.controller : targetProvince.controller,
+    );
+
+    // 兵糧消費（戦闘による消費）
+    if (sourceProvince.state.food > 0) {
+      final foodConsumption = (result.attackerLosses * 0.1).round().clamp(1, sourceProvince.state.food);
+      final updatedSourceState = sourceProvince.state.copyWith(
+        food: sourceProvince.state.food - foodConsumption,
+      );
+      updatedProvinces[sourceProvinceId] = updatedProvinces[sourceProvinceId]!.copyWith(
+        state: updatedSourceState,
+      );
+      _addEventLog('${sourceProvince.name}で戦闘により兵糧$foodConsumption を消費');
+    }
+
+    _gameState = _gameState.copyWith(provinces: updatedProvinces);
+
+    // 戦闘結果をログに記録
+    if (result.territoryChanged) {
+      _addEventLog('${targetProvince.name}を占領しました！');
+    } else if (result.result == BattleResultType.tacticalRetreat) {
+      _addEventLog('戦術的撤退により損失を最小化しました');
+    } else if (result.result == BattleResultType.stalemate) {
+      _addEventLog('膠着状態で戦闘が終了しました');
+    }
+
+    // 捕虜や撤退した英雄の処理
+    for (final heroName in result.capturedHeroes) {
+      _addEventLog('英雄$heroName が捕虜になりました');
+    }
+    for (final heroName in result.retreatedHeroes) {
+      _addEventLog('英雄$heroName が撤退しました');
+    }
+
+    // 戦闘結果ダイアログを表示する準備
+    _lastBattleResult = BattleResultInfo(
+      result: _convertToAdvancedBattleResult(result, sourceProvince, targetProvince),
+      sourceProvinceName: sourceProvince.name,
+      targetProvinceName: targetProvince.name,
+    );
+
+    notifyListeners();
+  }
+
+  /// DetailedBattleResultをAdvancedBattleResultに変換（UIとの互換性のため）
+  AdvancedBattleResult _convertToAdvancedBattleResult(
+    DetailedBattleResult result,
+    Province sourceProvince,
+    Province targetProvince,
+  ) {
+    // 勝者の決定
+    Faction winner;
+    if (result.result == BattleResultType.victory || result.result == BattleResultType.pyrrhicVictory) {
+      winner = sourceProvince.controller; // 攻撃側勝利
+    } else if (result.result == BattleResultType.defeat) {
+      winner = targetProvince.controller; // 防御側勝利
+    } else {
+      winner = targetProvince.controller; // 膠着・撤退の場合は防御側の勝利扱い
+    }
+
+    return AdvancedBattleResult(
+      winner: winner,
+      battleType: BattleType.fieldBattle,
+      attackerLosses: result.attackerLosses,
+      defenderLosses: result.defenderLosses,
+      territoryConquered: result.territoryChanged,
+      heroResults: [], // 今後実装予定
+      specialEvents: [result.battleDescription],
+    );
+  }
+
+  /// 兵糧システム処理（毎ターン）
+  void _processFoodSystem() {
+    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
+    var foodWarnings = 0;
+    var foodShortages = 0;
+
+    for (final province in _gameState.provinces.values) {
+      if (province.controller == Faction.liangshan) {
+        final currentFood = province.state.food;
+        final foodProduction = province.state.foodProduction;
+        final foodConsumption = province.state.getFoodConsumption(province.currentTroops);
+
+        // 月間兵糧収支
+        final foodBalance = foodProduction - foodConsumption;
+        final newFood = (currentFood + foodBalance).clamp(0, 9999).toInt();
+
+        // 州の兵糧状況を更新
+        final updatedState = province.state.copyWith(food: newFood);
+        updatedProvinces[province.id] = province.copyWith(state: updatedState);
+
+        // 兵糧不足の警告とペナルティ
+        if (newFood <= 0) {
+          foodShortages++;
+          _addEventLog('${province.name}で兵糧が枯渇！民心と治安が低下', toastType: ToastType.error);
+
+          // 兵糧不足ペナルティ：民心・治安低下
+          final penalizedState = updatedState.copyWith(
+            loyalty: (updatedState.loyalty - 5).clamp(0, 100),
+            security: (updatedState.security - 3).clamp(0, 100),
+          );
+          updatedProvinces[province.id] = updatedProvinces[province.id]!.copyWith(state: penalizedState);
+        } else if (province.state.isLowOnFood(province.currentTroops)) {
+          foodWarnings++;
+          _addEventLog('${province.name}の兵糧が不足しています（残り$newFood）', toastType: ToastType.warning);
+        }
+
+        // 兵糧生産と消費のログ（詳細情報）
+        if (foodBalance > 0) {
+          _addEventLog('${province.name}: 兵糧+$foodBalance（生産$foodProduction - 消費$foodConsumption）');
+        } else if (foodBalance < 0) {
+          _addEventLog('${province.name}: 兵糧$foodBalance（生産$foodProduction - 消費$foodConsumption）');
+        }
+      }
+    }
+
+    // 全体的な兵糧状況のサマリー
+    if (foodShortages > 0) {
+      _addEventLog('警告: $foodShortages 州で兵糧が枯渇しています！', toastType: ToastType.error);
+    } else if (foodWarnings > 0) {
+      _addEventLog('注意: $foodWarnings 州で兵糧が不足しています', toastType: ToastType.warning);
+    }
+
+    // 兵糧状況を更新
+    _gameState = _gameState.copyWith(provinces: updatedProvinces);
+  }
+
+  /// 兵糧補給
+  void supplyFood(String provinceId, int amount) {
+    final province = _gameState.provinces[provinceId];
+    if (province == null || province.controller != Faction.liangshan) {
+      _addEventLog('兵糧補給失敗: 梁山泊の州ではありません', toastType: ToastType.error);
+      return;
+    }
+
+    final cost = AppConstants.foodSupplyCost;
+    if (_gameState.playerGold < cost) {
+      _addEventLog('兵糧補給失敗: 資金が不足しています（必要: $cost両）', toastType: ToastType.error);
+      return;
+    }
+
+    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
+    final newFood = province.state.food + amount;
+    final updatedState = province.state.copyWith(food: newFood);
+    updatedProvinces[provinceId] = province.copyWith(state: updatedState);
+
+    _gameState = _gameState.copyWith(
+      provinces: updatedProvinces,
+      playerGold: _gameState.playerGold - cost,
+    );
+
+    _addEventLog('${province.name}に兵糧$amount を補給しました（コスト: $cost 両）', toastType: ToastType.success);
+    notifyListeners();
   }
 }
 

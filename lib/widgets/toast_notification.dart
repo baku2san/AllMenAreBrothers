@@ -31,8 +31,12 @@ class ToastNotificationManager {
 
     // 自動削除のタイマー
     Future.delayed(duration, () {
-      _removeNotification(notification);
-      _updateOverlay(context);
+      if (_activeNotifications.contains(notification)) {
+        _removeNotification(notification);
+        if (context.mounted) {
+          _updateOverlay(context);
+        }
+      }
     });
   }
 

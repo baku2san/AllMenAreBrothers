@@ -233,6 +233,136 @@ class ProvinceDetailPanel extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // 兵糧情報
+            Container(
+              padding: ModernSpacing.paddingMD,
+              decoration: ModernDecorations.card(colorScheme),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.restaurant_rounded,
+                        color: colorScheme.tertiary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '兵糧情報',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: colorScheme.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_rounded,
+                        color: colorScheme.onSurface,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '備蓄兵糧: ${province.state.food}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.agriculture_rounded,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '月間生産: ${province.state.foodProduction}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.local_dining_rounded,
+                        color: Colors.orange,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '月間消費: ${province.state.getFoodConsumption(province.currentTroops)}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        province.monthlyFoodBalance >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                        color: province.monthlyFoodBalance >= 0 ? Colors.green : Colors.red,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '月間収支: ${province.monthlyFoodBalance >= 0 ? '+' : ''}${province.monthlyFoodBalance}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: province.monthlyFoodBalance >= 0 ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (province.state.isLowOnFood(province.currentTroops)) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: ModernSpacing.paddingMD,
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: ModernRadius.smRadius,
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.warning_rounded,
+                            color: Colors.orange,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '兵糧不足！',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // 配置英雄情報
             if (_getHeroesInProvince().isNotEmpty) ...[
               Container(
