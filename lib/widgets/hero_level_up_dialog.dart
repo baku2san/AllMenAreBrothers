@@ -134,7 +134,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
               Text(
                 _showResults ? '${widget.hero.name}が成長しました' : '${widget.hero.name}の能力を向上させますか？',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -160,7 +160,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
         gradient: LinearGradient(
           colors: [
             colorScheme.primaryContainer,
-            colorScheme.primaryContainer.withOpacity(0.7),
+            colorScheme.primaryContainer.withValues(alpha: 0.7),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -196,7 +196,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
                 Text(
                   _getSkillDisplayName(widget.hero.skill),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onPrimaryContainer.withOpacity(0.8),
+                    color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -243,7 +243,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +266,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer.withOpacity(0.5),
+              color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -324,7 +324,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
         Icon(
           Icons.arrow_forward,
           size: 16,
-          color: colorScheme.onSurface.withOpacity(0.6),
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
         ),
         const SizedBox(width: 8),
         Text(
@@ -382,14 +382,14 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary.withOpacity(0.1),
-            colorScheme.secondary.withOpacity(0.1),
+            colorScheme.primary.withValues(alpha: 0.1),
+            colorScheme.secondary.withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -486,7 +486,7 @@ class _HeroLevelUpDialogState extends State<HeroLevelUpDialog> with TickerProvid
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

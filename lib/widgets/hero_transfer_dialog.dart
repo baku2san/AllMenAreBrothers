@@ -118,7 +118,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
               Text(
                 '${widget.hero.name}の配置先を選択してください',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -142,7 +142,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -172,7 +172,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
                 Text(
                   _getSkillDisplayName(widget.hero.skill),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -340,8 +340,8 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
                           _getFactionName(provinceState?.controller),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isSelected
-                                ? colorScheme.onPrimaryContainer.withOpacity(0.7)
-                                : colorScheme.onSurface.withOpacity(0.7),
+                                ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                                : colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -422,7 +422,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isSelected ? colorScheme.onPrimaryContainer.withOpacity(0.1) : colorScheme.surfaceContainerHighest,
+        color: isSelected ? colorScheme.onPrimaryContainer.withValues(alpha: 0.1) : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -431,7 +431,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
           Icon(
             icon,
             size: 14,
-            color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface.withOpacity(0.7),
+            color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 4),
           Text(

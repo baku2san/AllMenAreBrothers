@@ -159,8 +159,8 @@ class _HeroDetailCardState extends State<HeroDetailCard> with SingleTickerProvid
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: widget.isRecruited
-                      ? colorScheme.onPrimary.withOpacity(0.2)
-                      : colorScheme.primary.withOpacity(0.1),
+                      ? colorScheme.onPrimary.withValues(alpha: 0.2)
+                      : colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -180,7 +180,7 @@ class _HeroDetailCardState extends State<HeroDetailCard> with SingleTickerProvid
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: colorScheme.onPrimary.withOpacity(0.2),
+                color: colorScheme.onPrimary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -267,7 +267,7 @@ class _HeroDetailCardState extends State<HeroDetailCard> with SingleTickerProvid
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
         ),
       ],
@@ -400,7 +400,7 @@ class _HeroDetailCardState extends State<HeroDetailCard> with SingleTickerProvid
                         style: const TextStyle(fontSize: 12),
                       ),
                       side: BorderSide.none,
-                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
                     ))
                 .toList(),
           ),
@@ -457,7 +457,7 @@ class _HeroDetailCardState extends State<HeroDetailCard> with SingleTickerProvid
     if (value >= 80) return colorScheme.primary;
     if (value >= 70) return colorScheme.secondary;
     if (value >= 60) return colorScheme.tertiary;
-    return colorScheme.onSurface.withOpacity(0.6);
+    return colorScheme.onSurface.withValues(alpha: 0.6);
   }
 
   /// プログレスバーの色を取得
