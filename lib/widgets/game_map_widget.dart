@@ -23,6 +23,41 @@ class GameMapWidget extends StatefulWidget {
 class _GameMapWidgetState extends State<GameMapWidget> {
   @override
   Widget build(BuildContext context) {
+    // ゲーム状態が空の場合はローディング表示
+    if (widget.gameState.provinces.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.brown.shade200,
+              Colors.green.shade100,
+            ],
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'ゲーム準備中...',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(

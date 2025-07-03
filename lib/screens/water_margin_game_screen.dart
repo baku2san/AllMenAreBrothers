@@ -22,32 +22,69 @@ class WaterMarginGameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) {
-        final controller = WaterMarginGameController();
-        // 難易度選択ダイアログを表示
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showDifficultySelection(context, controller);
-        });
-        return controller;
-      },
+      create: (context) => WaterMarginGameController(),
       child: const _WaterMarginGameView(),
     );
   }
-
-  /// 難易度選択ダイアログを表示
-  Future<void> _showDifficultySelection(BuildContext context, WaterMarginGameController controller) async {
-    final selectedDifficulty = await showDifficultySelectionDialog(context);
-    if (selectedDifficulty != null) {
-      controller.initializeGameWithDifficulty(selectedDifficulty);
-    } else {
-      // キャンセルされた場合は標準難易度
-      controller.initializeGame();
-    }
-  }
 }
 
-class _WaterMarginGameView extends StatelessWidget {
+class _WaterMarginGameView extends StatefulWidget {
   const _WaterMarginGameView();
+
+  @override
+  State<_WaterMarginGameView> createState() => _WaterMarginGameViewState();
+}
+
+class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showDifficultySelection();
+    });
+  }
+
+  /// 難易度選択ダイアログを表示
+  Future<void> _showDifficultySelection() async {
+    if (_isInitialized) return;
+
+    try {
+      final controller = context.read<WaterMarginGameController>();
+
+      if (!mounted) return;
+      final selectedDifficulty = await showDifficultySelectionDialog(context);
+
+      if (selectedDifficulty != null) {
+        controller.initializeGameWithDifficulty(selectedDifficulty);
+      } else {
+        // キャンセルされた場合は標準難易度
+        controller.initializeGame();
+      }
+
+      // 初期化処理の完了を待つ
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e, stackTrace) {
+      debugPrint('難易度選択エラー: $e');
+      debugPrint('スタックトレース: $stackTrace');
+      // エラーが発生した場合はデフォルト初期化
+      if (mounted) {
+        final controller = context.read<WaterMarginGameController>();
+        controller.initializeGame();
+        await Future.delayed(const Duration(milliseconds: 100));
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +186,20 @@ class _WaterMarginGameView extends StatelessWidget {
         builder: (context, controller, child) {
           final theme = Theme.of(context);
           final colorScheme = theme.colorScheme;
+
+          // コントローラーの状態を確認
+          if (!_isInitialized || controller.gameState.provinces.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('ゲームを初期化中...'),
+                ],
+              ),
+            );
+          }
 
           // コントローラーにcontextを設定（トースト通知用）
           controller.setContext(context);

@@ -79,9 +79,22 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 難易度設定でゲームを初期化（内部メソッド）
   void _initializeGameWithSettings(GameDifficultySettings settings) {
     try {
+      // デバッグ用ログ
+      debugPrint('ゲーム初期化開始 - 難易度: ${settings.difficulty.displayName}');
+
+      // データ読み込み前の確認
+      final provinces = WaterMarginMap.initialProvinces;
+
+      final heroes = WaterMarginHeroes.initialHeroes;
+      print('� 英雄数: ${heroes.length}');
+      if (heroes.isNotEmpty) {
+        print('👥 最初の英雄: ${heroes.first.name}');
+      }
+
+      print('🔧 GameState 作成開始');
       _gameState = WaterMarginGameState(
-        provinces: WaterMarginMap.initialProvinces,
-        heroes: WaterMarginHeroes.initialHeroes,
+        provinces: provinces,
+        heroes: heroes,
         factions: {
           'liangshan': Faction.liangshan,
           'imperial': Faction.imperial,
@@ -97,6 +110,8 @@ class WaterMarginGameController extends ChangeNotifier {
         triggeredEvents: <String>{},
       );
 
+      print('📱 GameState 作成完了 - provinces: ${_gameState.provinces.length}, heroes: ${_gameState.heroes.length}');
+
       _eventLog.clear();
       _addEventLog('新しいゲームを開始しました（難易度: ${settings.difficulty.displayName}）');
       _addEventLog('初期資金: ${settings.initialGold}両');
@@ -108,8 +123,13 @@ class WaterMarginGameController extends ChangeNotifier {
         _addEventLog('⚠️ 達人モードは非常に困難です。慎重に進めてください');
       }
 
+      print('🔔 notifyListeners() 呼び出し開始');
       notifyListeners();
-    } catch (e) {
+      print('✅ ゲーム初期化完了');
+    } catch (e, stackTrace) {
+      print('❌ ゲーム初期化エラー: $e');
+      print('スタックトレース: $stackTrace');
+
       // データファイルが存在しない場合のフォールバック
       _gameState = WaterMarginGameState(
         provinces: const {},
