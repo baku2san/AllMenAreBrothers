@@ -278,147 +278,279 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
             }
           });
 
-          return Container(
-            decoration: ModernDecorations.surfaceBackground(colorScheme),
-            child: Stack(
-              children: [
-                Row(
-                  children: [
-                    // メインマップ領域
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          // マップ
-                          Expanded(
-                            child: Column(
-                              children: [
-                                // マップ表示
-                                Expanded(
-                                  child: Container(
-                                    margin: ModernSpacing.paddingMD,
-                                    decoration: ModernDecorations.elevatedCard(colorScheme),
-                                    child: ClipRRect(
-                                      borderRadius: ModernRadius.mdRadius,
-                                      child: GameMapWidget(
-                                        gameState: controller.gameState,
-                                        onProvinceSelected: controller.selectProvince,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+          try {
+            debugPrint('🔧 ゲーム画面UI構築開始...');
 
-                                // マップ凡例（より洗練されたデザイン）
-                                if (controller.selectedProvince != null)
-                                  Container(
-                                    margin: EdgeInsets.fromLTRB(
-                                      ModernSpacing.md,
-                                      0,
-                                      ModernSpacing.md,
-                                      ModernSpacing.md,
-                                    ),
-                                    decoration: ModernDecorations.card(colorScheme),
-                                    child: Padding(
-                                      padding: ModernSpacing.paddingMD,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          _buildLegendItem(
-                                              '選択中', AppColors.accentGold, Icons.location_on_rounded, colorScheme),
-                                          _buildLegendItem(
-                                              '隣接州', colorScheme.tertiary, Icons.link_rounded, colorScheme),
-                                          _buildLegendItem(
-                                              '攻撃可能', colorScheme.error, Icons.gps_fixed_rounded, colorScheme),
-                                          _buildLegendItem('味方州', colorScheme.primary, Icons.flag_rounded, colorScheme),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-
-                          // 統一コマンドバー
-                          const GameCommandBar(),
-                        ],
-                      ),
-                    ),
-
-                    // サイドバー（モダンデザイン）
-                    Container(
-                      width: AppConstants.sidebarWidth,
-                      margin: ModernSpacing.paddingMD,
-                      decoration: ModernDecorations.elevatedCard(colorScheme),
-                      child: ClipRRect(
-                        borderRadius: ModernRadius.mdRadius,
+            return Container(
+              decoration: ModernDecorations.surfaceBackground(colorScheme),
+              child: Stack(
+                children: [
+                  Row(
+                    children: [
+                      // メインマップ領域
+                      Expanded(
+                        flex: 3,
                         child: Column(
                           children: [
-                            // ゲーム情報パネル（改良版）
-                            Container(
-                              height: 200,
-                              decoration: ModernDecorations.primaryContainer(colorScheme),
-                              child: GameInfoPanel(
-                                gameState: controller.gameState,
-                                eventHistory: controller.eventHistory,
-                              ),
-                            ),
-
-                            // 州詳細パネル（改良版）
+                            // マップ
                             Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surface,
-                                ),
-                                child: controller.selectedProvince != null
-                                    ? ProvinceDetailPanel(
-                                        province: controller.selectedProvince!,
-                                        gameState: controller.gameState,
-                                        controller: controller,
-                                      )
-                                    : Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                              child: Column(
+                                children: [
+                                  // マップ表示
+                                  Expanded(
+                                    child: Container(
+                                      margin: ModernSpacing.paddingMD,
+                                      decoration: ModernDecorations.elevatedCard(colorScheme),
+                                      child: ClipRRect(
+                                        borderRadius: ModernRadius.mdRadius,
+                                        child: Builder(
+                                          builder: (context) {
+                                            try {
+                                              debugPrint('🗺️ GameMapWidget構築中...');
+                                              return GameMapWidget(
+                                                gameState: controller.gameState,
+                                                onProvinceSelected: controller.selectProvince,
+                                              );
+                                            } catch (e, stackTrace) {
+                                              debugPrint('❌ GameMapWidget構築エラー: $e');
+                                              debugPrint('スタックトレース: $stackTrace');
+                                              return Container(
+                                                color: Colors.red.withValues(alpha: 0.1),
+                                                child: Center(
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.error, size: 48, color: Colors.red),
+                                                      const SizedBox(height: 16),
+                                                      Text('マップ読み込みエラー', style: TextStyle(color: Colors.red)),
+                                                      const SizedBox(height: 8),
+                                                      Text('$e', style: TextStyle(fontSize: 12, color: Colors.red)),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // マップ凡例（より洗練されたデザイン）
+                                  if (controller.selectedProvince != null)
+                                    Container(
+                                      margin: EdgeInsets.fromLTRB(
+                                        ModernSpacing.md,
+                                        0,
+                                        ModernSpacing.md,
+                                        ModernSpacing.md,
+                                      ),
+                                      decoration: ModernDecorations.card(colorScheme),
+                                      child: Padding(
+                                        padding: ModernSpacing.paddingMD,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                           children: [
-                                            Container(
-                                              padding: ModernSpacing.paddingXL,
-                                              decoration: BoxDecoration(
-                                                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.touch_app_rounded,
-                                                size: 48,
-                                                color: colorScheme.primary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              '州を選択してください',
-                                              style: AppTextStyles.bodyLarge.copyWith(
-                                                color: colorScheme.onSurfaceVariant,
-                                              ),
-                                            ),
+                                            _buildLegendItem(
+                                                '選択中', AppColors.accentGold, Icons.location_on_rounded, colorScheme),
+                                            _buildLegendItem(
+                                                '隣接州', colorScheme.tertiary, Icons.link_rounded, colorScheme),
+                                            _buildLegendItem(
+                                                '攻撃可能', colorScheme.error, Icons.gps_fixed_rounded, colorScheme),
+                                            _buildLegendItem(
+                                                '味方州', colorScheme.primary, Icons.flag_rounded, colorScheme),
                                           ],
                                         ),
                                       ),
+                                    ),
+                                ],
                               ),
+                            ),
+
+                            // 統一コマンドバー
+                            Builder(
+                              builder: (context) {
+                                try {
+                                  debugPrint('🎮 GameCommandBar構築中...');
+                                  return const GameCommandBar();
+                                } catch (e, stackTrace) {
+                                  debugPrint('❌ GameCommandBar構築エラー: $e');
+                                  debugPrint('スタックトレース: $stackTrace');
+                                  return Container(
+                                    height: 60,
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    child: Center(
+                                      child: Text('コマンドバーエラー: $e', style: TextStyle(color: Colors.orange)),
+                                    ),
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
                       ),
+
+                      // サイドバー（モダンデザイン）
+                      Container(
+                        width: AppConstants.sidebarWidth,
+                        margin: ModernSpacing.paddingMD,
+                        decoration: ModernDecorations.elevatedCard(colorScheme),
+                        child: ClipRRect(
+                          borderRadius: ModernRadius.mdRadius,
+                          child: Column(
+                            children: [
+                              // ゲーム情報パネル（改良版）
+                              Container(
+                                height: 200,
+                                decoration: ModernDecorations.primaryContainer(colorScheme),
+                                child: Builder(
+                                  builder: (context) {
+                                    try {
+                                      debugPrint('📊 GameInfoPanel構築中...');
+                                      return GameInfoPanel(
+                                        gameState: controller.gameState,
+                                        eventHistory: controller.eventHistory,
+                                      );
+                                    } catch (e, stackTrace) {
+                                      debugPrint('❌ GameInfoPanel構築エラー: $e');
+                                      debugPrint('スタックトレース: $stackTrace');
+                                      return Container(
+                                        color: Colors.yellow.withValues(alpha: 0.1),
+                                        child: Center(
+                                          child: Text('情報パネルエラー: $e', style: TextStyle(color: Colors.orange)),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+
+                              // 州詳細パネル（改良版）
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surface,
+                                  ),
+                                  child: controller.selectedProvince != null
+                                      ? Builder(
+                                          builder: (context) {
+                                            try {
+                                              debugPrint('🏛️ ProvinceDetailPanel構築中...');
+                                              return ProvinceDetailPanel(
+                                                province: controller.selectedProvince!,
+                                                gameState: controller.gameState,
+                                                controller: controller,
+                                              );
+                                            } catch (e, stackTrace) {
+                                              debugPrint('❌ ProvinceDetailPanel構築エラー: $e');
+                                              debugPrint('スタックトレース: $stackTrace');
+                                              return Container(
+                                                color: Colors.purple.withValues(alpha: 0.1),
+                                                child: Center(
+                                                  child: Text('州詳細パネルエラー: $e', style: TextStyle(color: Colors.purple)),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        )
+                                      : Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: ModernSpacing.paddingXL,
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.touch_app_rounded,
+                                                  size: 48,
+                                                  color: colorScheme.primary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                '州を選択してください',
+                                                style: AppTextStyles.bodyLarge.copyWith(
+                                                  color: colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // チュートリアル・ヒントパネル
+                  if (controller.showTutorial)
+                    Builder(
+                      builder: (context) {
+                        try {
+                          debugPrint('💡 TutorialHintPanel構築中...');
+                          return TutorialHintPanel(
+                            gameState: controller.gameState,
+                            onClose: controller.hideTutorial,
+                          );
+                        } catch (e, stackTrace) {
+                          debugPrint('❌ TutorialHintPanel構築エラー: $e');
+                          debugPrint('スタックトレース: $stackTrace');
+                          return Container(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            child: Center(
+                              child: Text('チュートリアルパネルエラー: $e', style: TextStyle(color: Colors.blue)),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                ],
+              ),
+            );
+          } catch (e, stackTrace) {
+            debugPrint('❌ ゲーム画面全体構築エラー: $e');
+            debugPrint('スタックトレース: $stackTrace');
+            return Container(
+              color: colorScheme.errorContainer,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+                    const SizedBox(height: 24),
+                    Text(
+                      'ゲーム画面の読み込みに失敗しました',
+                      style: AppTextStyles.headlineSmall.copyWith(color: colorScheme.error),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'エラー詳細: $e',
+                      style: AppTextStyles.bodyMedium.copyWith(color: colorScheme.onErrorContainer),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        // 画面をリロード
+                        setState(() {
+                          _isInitialized = false;
+                          _isInitializing = false;
+                        });
+                        _showDifficultySelection();
+                      },
+                      child: const Text('再試行'),
                     ),
                   ],
                 ),
-
-                // チュートリアル・ヒントパネル
-                if (controller.showTutorial)
-                  TutorialHintPanel(
-                    gameState: controller.gameState,
-                    onClose: controller.hideTutorial,
-                  ),
-              ],
-            ),
-          );
+              ),
+            );
+          }
         },
       ),
     );
