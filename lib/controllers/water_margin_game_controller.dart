@@ -65,24 +65,58 @@ class WaterMarginGameController extends ChangeNotifier {
   }
 
   /// ゲームを初期化（難易度指定版）
-  void initializeGameWithDifficulty(GameDifficulty difficulty) {
-    _difficultySettings = GameDifficultySettings.forDifficulty(difficulty);
-    _initializeGameWithSettings(_difficultySettings!);
+  Future<void> initializeGameWithDifficulty(GameDifficulty difficulty) async {
+    try {
+      debugPrint('🎯 initializeGameWithDifficulty開始: $difficulty');
+
+      // 難易度設定を取得
+      debugPrint('🔧 難易度設定取得中...');
+      _difficultySettings = GameDifficultySettings.forDifficulty(difficulty);
+      debugPrint('🔧 難易度設定取得完了: ${_difficultySettings!.difficulty.displayName}');
+
+      // 初期化実行
+      debugPrint('🎮 ゲーム初期化実行中...');
+      await _initializeGameWithSettings(_difficultySettings!);
+      debugPrint('🎯 initializeGameWithDifficulty完了');
+    } catch (e, stackTrace) {
+      debugPrint('❌ initializeGameWithDifficulty エラー: $e');
+      debugPrint('スタックトレース: $stackTrace');
+
+      // フォールバック: 標準難易度で再試行
+      debugPrint('🔄 フォールバック: 標準難易度で再試行');
+      _difficultySettings = GameDifficultySettings.forDifficulty(GameDifficulty.normal);
+      await _initializeGameWithSettings(_difficultySettings!);
+    }
   }
 
   /// ゲームを初期化
-  void initializeGame() {
+  Future<void> initializeGame() async {
+    debugPrint('🎯 initializeGame開始（標準難易度）');
     // 標準難易度で初期化
-    initializeGameWithDifficulty(GameDifficulty.normal);
+    await initializeGameWithDifficulty(GameDifficulty.normal);
+    debugPrint('🎯 initializeGame完了');
   }
 
   /// 難易度設定でゲームを初期化（内部メソッド）
-  void _initializeGameWithSettings(GameDifficultySettings settings) {
+  Future<void> _initializeGameWithSettings(GameDifficultySettings settings) async {
     try {
+      debugPrint('🎮 ゲーム初期化開始 - 難易度: ${settings.difficulty.displayName}');
+
       // データ読み込み
+      debugPrint('📊 データ読み込み開始...');
       final provinces = WaterMarginMap.initialProvinces;
       final heroes = WaterMarginHeroes.initialHeroes;
+      debugPrint('📊 データ読み込み完了 - provinces: ${provinces.length}, heroes: ${heroes.length}');
 
+      // データ検証
+      if (provinces.isEmpty) {
+        throw Exception('provinces データが空です');
+      }
+      if (heroes.isEmpty) {
+        throw Exception('heroes データが空です');
+      }
+
+      debugPrint('🔧 GameState作成開始...');
       _gameState = WaterMarginGameState(
         provinces: provinces,
         heroes: heroes,
@@ -94,12 +128,13 @@ class WaterMarginGameController extends ChangeNotifier {
           'neutral': Faction.neutral,
         },
         currentTurn: 1,
-        playerGold: settings.initialGold, // 難易度に応じた初期資金
+        playerGold: settings.initialGold,
         gameStatus: GameStatus.playing,
         diplomacy: DiplomacySystem.withDefaults(),
         difficulty: settings.difficulty,
         triggeredEvents: <String>{},
       );
+      debugPrint('🔧 GameState作成完了 - provinces: ${_gameState.provinces.length}');
 
       _eventLog.clear();
       _addEventLog('新しいゲームを開始しました（難易度: ${settings.difficulty.displayName}）');
@@ -112,12 +147,18 @@ class WaterMarginGameController extends ChangeNotifier {
         _addEventLog('⚠️ 達人モードは非常に困難です。慎重に進めてください');
       }
 
+      debugPrint('🔔 notifyListeners呼び出し前...');
       notifyListeners();
+      debugPrint('✅ ゲーム初期化完了');
+
+      // 初期化完了後の検証
+      debugPrint('🔍 初期化完了後の検証: provinces=${_gameState.provinces.length}, heroes=${_gameState.heroes.length}');
     } catch (e, stackTrace) {
-      debugPrint('ゲーム初期化エラー: $e');
+      debugPrint('❌ ゲーム初期化エラー: $e');
       debugPrint('スタックトレース: $stackTrace');
 
       // データファイルが存在しない場合のフォールバック
+      debugPrint('🔄 フォールバック初期化開始...');
       _gameState = WaterMarginGameState(
         provinces: const {},
         heroes: const [],
@@ -130,6 +171,9 @@ class WaterMarginGameController extends ChangeNotifier {
       );
       _addEventLog('ゲームデータの読み込みに失敗しました');
       notifyListeners();
+
+      // エラーを再スロー
+      rethrow;
     }
   }
 

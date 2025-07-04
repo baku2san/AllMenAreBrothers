@@ -37,6 +37,7 @@ class _WaterMarginGameView extends StatefulWidget {
 
 class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
   bool _isInitialized = false;
+  bool _isInitializing = false; // 初期化中フラグを追加
 
   @override
   void initState() {
@@ -48,40 +49,86 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
 
   /// 難易度選択ダイアログを表示
   Future<void> _showDifficultySelection() async {
-    if (_isInitialized) return;
+    if (_isInitialized || _isInitializing) return;
+
+    setState(() {
+      _isInitializing = true;
+    });
 
     try {
+      debugPrint('🎯 難易度選択ダイアログ開始');
       final controller = context.read<WaterMarginGameController>();
 
       if (!mounted) return;
+      debugPrint('🎯 ダイアログ表示中...');
       final selectedDifficulty = await showDifficultySelectionDialog(context);
+      debugPrint('🎯 選択された難易度: $selectedDifficulty');
 
       if (selectedDifficulty != null) {
-        controller.initializeGameWithDifficulty(selectedDifficulty);
+        debugPrint('🎮 ゲーム初期化開始（選択された難易度: ${selectedDifficulty.displayName}）');
+        await controller.initializeGameWithDifficulty(selectedDifficulty);
+        debugPrint('🎮 初期化メソッド呼び出し完了');
       } else {
+        debugPrint('🎮 ゲーム初期化開始（デフォルト難易度）');
         // キャンセルされた場合は標準難易度
-        controller.initializeGame();
+        await controller.initializeGame();
+        debugPrint('🎮 デフォルト初期化メソッド呼び出し完了');
       }
 
-      // 初期化処理の完了を待つ
-      await Future.delayed(const Duration(milliseconds: 100));
+      // 初期化完了後の状態チェック
+      await Future.delayed(const Duration(milliseconds: 200)); // 状態反映を待つ
+      debugPrint(
+          '📊 現在の状態: provinces=${controller.gameState.provinces.length}, heroes=${controller.gameState.heroes.length}');
 
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
+      // 初期化が本当に完了したかチェック
+      if (controller.gameState.provinces.isNotEmpty && controller.gameState.heroes.isNotEmpty) {
+        debugPrint('✅ 初期化完了確認OK');
+        if (mounted) {
+          debugPrint('🔄 setState実行中...');
+          setState(() {
+            _isInitialized = true;
+            _isInitializing = false;
+          });
+          debugPrint('✅ 初期化完了フラグ設定完了');
+        }
+      } else {
+        debugPrint(
+            '❌ 初期化未完了 - provinces=${controller.gameState.provinces.length}, heroes=${controller.gameState.heroes.length}');
+        // 初期化が失敗した場合の処理
+        if (mounted) {
+          debugPrint('🔄 再初期化試行中...');
+          await controller.initializeGame(); // 再試行
+          await Future.delayed(const Duration(milliseconds: 200));
+          setState(() {
+            _isInitialized = true;
+            _isInitializing = false;
+          });
+          debugPrint('🔄 再初期化完了');
+        }
       }
     } catch (e, stackTrace) {
-      debugPrint('難易度選択エラー: $e');
+      debugPrint('❌ 難易度選択エラー: $e');
       debugPrint('スタックトレース: $stackTrace');
       // エラーが発生した場合はデフォルト初期化
       if (mounted) {
+        debugPrint('🔄 エラー後フォールバック初期化...');
         final controller = context.read<WaterMarginGameController>();
-        controller.initializeGame();
-        await Future.delayed(const Duration(milliseconds: 100));
-        setState(() {
-          _isInitialized = true;
-        });
+        try {
+          await controller.initializeGame();
+          await Future.delayed(const Duration(milliseconds: 200));
+          setState(() {
+            _isInitialized = true;
+            _isInitializing = false;
+          });
+          debugPrint('🔄 フォールバック初期化完了');
+        } catch (fallbackError) {
+          debugPrint('❌ フォールバック初期化もエラー: $fallbackError');
+          // 最後の手段: 強制的に初期化フラグを立てる
+          setState(() {
+            _isInitialized = true;
+            _isInitializing = false;
+          });
+        }
       }
     }
   }
@@ -187,19 +234,39 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
           final theme = Theme.of(context);
           final colorScheme = theme.colorScheme;
 
-          // コントローラーの状態を確認
-          if (!_isInitialized || controller.gameState.provinces.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('ゲームを初期化中...'),
-                ],
+          debugPrint(
+              '🔄 Build実行: _isInitialized=$_isInitialized, _isInitializing=$_isInitializing, provinces=${controller.gameState.provinces.length}');
+
+          // 初期化中またはデータが不完全な場合はローディング画面を表示
+          if (_isInitializing ||
+              !_isInitialized ||
+              controller.gameState.provinces.isEmpty ||
+              controller.gameState.heroes.isEmpty) {
+            debugPrint('🔄 ローディング画面表示中...');
+            return Container(
+              color: colorScheme.surface,
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 24),
+                    Text(
+                      'ゲームを初期化中...',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'しばらくお待ちください',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
             );
           }
+
+          debugPrint('🎮 ゲーム画面表示中...');
 
           // コントローラーにcontextを設定（トースト通知用）
           controller.setContext(context);
