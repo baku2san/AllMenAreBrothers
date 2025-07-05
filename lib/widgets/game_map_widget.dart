@@ -136,7 +136,30 @@ class _GameMapWidgetState extends State<GameMapWidget> {
                   ),
                 );
               }
-            }).toList(),
+            }),
+
+            /*
+            /// 元のCustomPaint処理（将来的に復活予定）
+            Widget _buildAdjacencyLinesWithCustomPaint() {
+              final selectedProvince = widget.gameState.selectedProvinceId != null
+                  ? widget.gameState.provinces[widget.gameState.selectedProvinceId!]
+                  : null;
+
+              if (selectedProvince == null) return const SizedBox();
+
+              final screenSize = MediaQuery.of(context).size;
+              final mapArea = Size(screenSize.width * 0.75, screenSize.height - 56);
+
+              return CustomPaint(
+                size: mapArea,
+                painter: AdjacencyLinePainter(
+                  selectedProvince: selectedProvince,
+                  allProvinces: widget.gameState.provinces,
+                  mapArea: mapArea,
+                ),
+              );
+            }
+            */
           ],
         ),
       );
@@ -184,21 +207,6 @@ class _GameMapWidgetState extends State<GameMapWidget> {
         ),
       ),
     );
-
-    // 元のCustomPaint処理（コメントアウト）
-    /*
-    final screenSize = MediaQuery.of(context).size;
-    final mapArea = Size(screenSize.width * 0.75, screenSize.height - 56);
-
-    return CustomPaint(
-      size: mapArea,
-      painter: AdjacencyLinePainter(
-        selectedProvince: selectedProvince,
-        allProvinces: widget.gameState.provinces,
-        mapArea: mapArea,
-      ),
-    );
-    */
   }
 
   /// 州マーカーの構築
