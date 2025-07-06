@@ -64,6 +64,10 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     debugPrint('🗺️ メインマップ構築開始（provinces: ${widget.gameState.provinces.length}）...');
 
     try {
+      // 固定サイズでStackをテスト（Web描画切り分け用）
+      const double mapWidth = 800;
+      const double mapHeight = 600;
+      debugPrint('🧪 Stackテスト: width=$mapWidth, height=$mapHeight');
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -104,7 +108,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
                 builder: (context) {
                   try {
                     debugPrint('🔗 隣接関係線構築中...');
-                    return _buildAdjacencyLines();
+                    return _buildAdjacencyLines(mapWidth, mapHeight);
                   } catch (e, stackTrace) {
                     debugPrint('❌ 隣接関係線エラー: $e');
                     debugPrint('スタックトレース: $stackTrace');
@@ -122,7 +126,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
             ...widget.gameState.provinces.values.map((province) {
               try {
                 debugPrint('🏛️ 州マーカー構築中: ${province.name}');
-                return _buildProvinceMarker(province);
+                return _buildProvinceMarker(province, mapWidth, mapHeight);
               } catch (e, stackTrace) {
                 debugPrint('❌ 州マーカーエラー (${province.name}): $e');
                 debugPrint('スタックトレース: $stackTrace');
@@ -137,29 +141,6 @@ class _GameMapWidgetState extends State<GameMapWidget> {
                 );
               }
             }),
-
-            /*
-            /// 元のCustomPaint処理（将来的に復活予定）
-            Widget _buildAdjacencyLinesWithCustomPaint() {
-              final selectedProvince = widget.gameState.selectedProvinceId != null
-                  ? widget.gameState.provinces[widget.gameState.selectedProvinceId!]
-                  : null;
-
-              if (selectedProvince == null) return const SizedBox();
-
-              final screenSize = MediaQuery.of(context).size;
-              final mapArea = Size(screenSize.width * 0.75, screenSize.height - 56);
-
-              return CustomPaint(
-                size: mapArea,
-                painter: AdjacencyLinePainter(
-                  selectedProvince: selectedProvince,
-                  allProvinces: widget.gameState.provinces,
-                  mapArea: mapArea,
-                ),
-              );
-            }
-            */
           ],
         ),
       );
@@ -185,7 +166,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
   }
 
   /// 隣接関係の線を描画
-  Widget _buildAdjacencyLines() {
+  Widget _buildAdjacencyLines(double mapWidth, double mapHeight) {
     final selectedProvince = widget.gameState.selectedProvinceId != null
         ? widget.gameState.provinces[widget.gameState.selectedProvinceId!]
         : null;
@@ -196,9 +177,9 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     debugPrint('🔧 AdjacencyLines構築中（CustomPaint無効化テスト）...');
 
     return Container(
-      width: 200,
-      height: 100,
-      color: Colors.blue.withValues(alpha: 0.1),
+      width: mapWidth,
+      height: mapHeight,
+      color: Colors.blue.withValues(alpha: 0.05),
       child: const Center(
         child: Text(
           '隣接関係線\n（テスト表示）',
@@ -210,13 +191,16 @@ class _GameMapWidgetState extends State<GameMapWidget> {
   }
 
   /// 州マーカーの構築
-  Widget _buildProvinceMarker(Province province) {
-    final screenSize = MediaQuery.of(context).size;
-    final mapArea = Size(screenSize.width * 0.75, screenSize.height - 56); // AppBarを除く
+  Widget _buildProvinceMarker(Province province, double mapWidth, double mapHeight) {
+    final mapArea = Size(mapWidth, mapHeight);
 
+    // null安全: dx/dyがnull, NaN, Infiniteの場合は0にフォールバック
+    // dx/dyがnullの場合も考慮（nullなら0.0）
+    final double dx = (province.position.dx.isNaN || province.position.dx.isInfinite) ? 0.0 : (province.position.dx);
+    final double dy = (province.position.dy.isNaN || province.position.dy.isInfinite) ? 0.0 : (province.position.dy);
     final position = Offset(
-      mapArea.width * province.position.dx - 40, // マーカーの半分の幅
-      mapArea.height * province.position.dy - 40, // マーカーの半分の高さ
+      mapArea.width * dx - 40, // マーカーの半分の幅
+      mapArea.height * dy - 40, // マーカーの半分の高さ
     );
 
     final isSelected = widget.gameState.selectedProvinceId == province.id;
