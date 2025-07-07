@@ -51,9 +51,37 @@ class _TutorialHintPanelState extends State<TutorialHintPanel> with SingleTicker
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
     final tips = GameBalanceHelper.getTutorialTips(widget.gameState);
 
-    if (tips.isEmpty) return const SizedBox.shrink();
+    if (tips.isEmpty) {
+      return Positioned(
+        top: 16,
+        right: 16,
+        child: Container(
+          width: 320,
+          constraints: const BoxConstraints(maxHeight: 120),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: ModernRadius.mdRadius,
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.3),
+              width: 2,
+            ),
+            boxShadow: ModernShadows.elevation3,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                '現在表示できるヒントはありません',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Positioned(
       top: 16,
