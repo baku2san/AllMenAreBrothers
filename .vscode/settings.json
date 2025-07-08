@@ -124,5 +124,21 @@
     "**/*.code-search": true,
     "**/build": true,
     "**/.dart_tool": true
+  },
+  "mcp": {
+    "servers": {
+      "imagesorcery": {
+        "command": "uvx",
+        "args": [
+          "imagesorcery-mcp"
+        ]
+      },
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ]
+      }
+    }
   }
 }

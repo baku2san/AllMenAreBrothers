@@ -63,11 +63,12 @@ class _GameMapWidgetState extends State<GameMapWidget> {
 
     debugPrint('🗺️ メインマップ構築開始（provinces: ${widget.gameState.provinces.length}）...');
 
+    // 画面サイズに合わせてStackサイズを可変にする
+    final size = MediaQuery.of(context).size;
+    final double mapWidth = size.width;
+    final double mapHeight = size.height;
+    debugPrint('🧪 Stackサイズ: width=$mapWidth, height=$mapHeight');
     try {
-      // 固定サイズでStackをテスト（Web描画切り分け用）
-      const double mapWidth = 800;
-      const double mapHeight = 600;
-      debugPrint('🧪 Stackテスト: width=$mapWidth, height=$mapHeight');
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
