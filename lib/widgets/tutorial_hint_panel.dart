@@ -49,12 +49,12 @@ class _TutorialHintPanelState extends State<TutorialHintPanel> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('💡 TutorialHintPanel.build開始');
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final tips = GameBalanceHelper.getTutorialTips(widget.gameState);
-
     if (tips.isEmpty) {
+      debugPrint('💡 TutorialHintPanel.build完了（ヒントなし）');
       return Positioned(
         top: 16,
         right: 16,
@@ -82,7 +82,7 @@ class _TutorialHintPanelState extends State<TutorialHintPanel> with SingleTicker
         ),
       );
     }
-
+    debugPrint('💡 TutorialHintPanel.build完了');
     return Positioned(
       top: 16,
       right: 16,

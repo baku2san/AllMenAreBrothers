@@ -20,10 +20,11 @@ class GameInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('📊 GameInfoPanel.build開始');
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
+    final result = Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       child: SingleChildScrollView(
         child: Column(
@@ -124,6 +125,8 @@ class GameInfoPanel extends StatelessWidget {
         ),
       ),
     );
+    debugPrint('📊 GameInfoPanel.build完了');
+    return result;
   }
 
   /// 情報カードを構築

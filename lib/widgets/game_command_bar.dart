@@ -19,10 +19,11 @@ class GameCommandBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🎮 GameCommandBar.build開始');
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Consumer<WaterMarginGameController>(
+    final result = Consumer<WaterMarginGameController>(
       builder: (context, controller, child) {
         final selectedProvince = controller.selectedProvince;
 
@@ -113,6 +114,8 @@ class GameCommandBar extends StatelessWidget {
         );
       },
     );
+    debugPrint('🎮 GameCommandBar.build完了');
+    return result;
   }
 
   /// モダンコマンドボタンを構築
