@@ -70,16 +70,8 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     debugPrint('🧪 Stackサイズ: width=$mapWidth, height=$mapHeight');
     try {
       return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.brown.shade200,
-              Colors.green.shade100,
-            ],
-          ),
-        ),
+        // 背景色を一時的に真っ赤にして描画範囲を可視化
+        color: Colors.red,
         child: Stack(
           children: [
             // 背景のマップタイトル
