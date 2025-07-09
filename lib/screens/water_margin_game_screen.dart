@@ -237,11 +237,8 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
           debugPrint(
               '🔄 Build実行: _isInitialized=$_isInitialized, _isInitializing=$_isInitializing, provinces=${controller.gameState.provinces.length}');
 
-          // 初期化中またはデータが不完全な場合はローディング画面を表示
-          if (_isInitializing ||
-              !_isInitialized ||
-              controller.gameState.provinces.isEmpty ||
-              controller.gameState.heroes.isEmpty) {
+          // 初期化中または初期化未完了の場合はローディング画面を表示
+          if (_isInitializing || !_isInitialized) {
             debugPrint('🔄 ローディング画面表示中...');
             return Container(
               color: colorScheme.surface,
