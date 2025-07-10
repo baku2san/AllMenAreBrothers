@@ -77,6 +77,13 @@ class _GameMapWidgetState extends State<GameMapWidget> {
           color: Colors.red, // 背景色で描画範囲を可視化
           child: Stack(
             children: [
+              // デバッグ用: 常に見えるはずの青い背景
+              Positioned.fill(
+                child: Container(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  child: const Center(child: Text('DEBUG BG', style: TextStyle(fontSize: 40, color: Colors.white))),
+                ),
+              ),
               // 背景のマップタイトル
               Positioned(
                 top: 16,
@@ -199,6 +206,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
       mapArea.width * dx - 40, // マーカーの半分の幅
       mapArea.height * dy - 40, // マーカーの半分の高さ
     );
+    debugPrint('🟩 ${province.name} marker: left=${position.dx}, top=${position.dy}');
 
     final isSelected = widget.gameState.selectedProvinceId == province.id;
     final isPlayerProvince = province.controller == Faction.liangshan;
