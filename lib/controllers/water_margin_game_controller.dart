@@ -156,11 +156,12 @@ class WaterMarginGameController extends ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('❌ ゲーム初期化エラー: $e');
       debugPrint('スタックトレース: $stackTrace');
-
-      // データファイルが存在しない場合のフォールバック
-      debugPrint('🔄 フォールバック初期化開始...');
+      debugPrint('❌ provinces初期化失敗: 空のままです');
+      // フォールバック: 梁山泊だけでも投入
       _gameState = WaterMarginGameState(
-        provinces: const {},
+        provinces: WaterMarginMap.initialProvinces.containsKey('liangshan')
+            ? {'liangshan': WaterMarginMap.initialProvinces['liangshan']!}
+            : const {},
         heroes: const [],
         factions: const {},
         currentTurn: 1,
@@ -169,9 +170,8 @@ class WaterMarginGameController extends ChangeNotifier {
         difficulty: settings.difficulty,
         triggeredEvents: <String>{},
       );
-      _addEventLog('ゲームデータの読み込みに失敗しました');
+      _addEventLog('ゲームデータの読み込みに失敗しました（liangshanのみ投入）');
       notifyListeners();
-
       // エラーを再スロー
       rethrow;
     }

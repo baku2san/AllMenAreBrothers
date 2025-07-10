@@ -24,6 +24,9 @@ class _GameMapWidgetState extends State<GameMapWidget> {
   @override
   Widget build(BuildContext context) {
     debugPrint('🗺️ GameMapWidget.build開始...');
+    debugPrint('🧩 provinces内容: ${widget.gameState.provinces}');
+    debugPrint('🧩 provinces.keys: ${widget.gameState.provinces.keys.toList()}');
+    debugPrint('🧩 provinces.names: ${widget.gameState.provinces.values.map((p) => p.name).toList()}');
 
     // ゲーム状態が空の場合はローディング表示
     if (widget.gameState.provinces.isEmpty) {
@@ -136,69 +139,6 @@ class _GameMapWidgetState extends State<GameMapWidget> {
               }),
             ],
           ),
-        ),
-      );
-            // 背景のマップタイトル
-            Positioned(
-              top: 16,
-              left: 16,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  '北宋天下図',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-
-            // 隣接関係の線を描画
-            if (widget.gameState.selectedProvinceId != null)
-              Builder(
-                builder: (context) {
-                  try {
-                    debugPrint('🔗 隣接関係線構築中...');
-                    return _buildAdjacencyLines(mapWidth, mapHeight);
-                  } catch (e, stackTrace) {
-                    debugPrint('❌ 隣接関係線エラー: $e');
-                    debugPrint('スタックトレース: $stackTrace');
-                    return Container(
-                      color: Colors.yellow.withValues(alpha: 0.3),
-                      child: Center(
-                        child: Text('隣接線エラー: $e', style: TextStyle(color: Colors.red)),
-                      ),
-                    );
-                  }
-                },
-              ),
-
-            // 州の配置
-            ...widget.gameState.provinces.values.map((province) {
-              try {
-                debugPrint('🏛️ 州マーカー構築中: ${province.name}');
-                return _buildProvinceMarker(province, mapWidth, mapHeight);
-              } catch (e, stackTrace) {
-                debugPrint('❌ 州マーカーエラー (${province.name}): $e');
-                debugPrint('スタックトレース: $stackTrace');
-                return Positioned(
-                  left: 100,
-                  top: 100,
-                  child: Container(
-                    color: Colors.red.withValues(alpha: 0.3),
-                    padding: const EdgeInsets.all(8),
-                    child: Text('${province.name}エラー', style: TextStyle(color: Colors.red)),
-                  ),
-                );
-              }
-            }),
-          ],
         ),
       );
     } catch (e, stackTrace) {
