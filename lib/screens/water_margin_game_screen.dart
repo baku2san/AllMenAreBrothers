@@ -77,8 +77,11 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
 
       // 初期化完了後の状態チェック
       await Future.delayed(const Duration(milliseconds: 200)); // 状態反映を待つ
-      debugPrint(
-          '📊 現在の状態: provinces=${controller.gameState.provinces.length}, heroes=${controller.gameState.heroes.length}');
+      debugPrint('📊 provinces内容: ${controller.gameState.provinces}');
+      debugPrint('📊 provinces.keys: ${controller.gameState.provinces.keys.toList()}');
+      debugPrint('📊 provinces.names: ${controller.gameState.provinces.values.map((p) => p.name).toList()}');
+      debugPrint('📊 heroes内容: ${controller.gameState.heroes}');
+      debugPrint('📊 heroes.names: ${controller.gameState.heroes.map((h) => h.name).toList()}');
 
       // 初期化が本当に完了したかチェック
       if (controller.gameState.provinces.isNotEmpty && controller.gameState.heroes.isNotEmpty) {
@@ -94,6 +97,8 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
       } else {
         debugPrint(
             '❌ 初期化未完了 - provinces=${controller.gameState.provinces.length}, heroes=${controller.gameState.heroes.length}');
+        debugPrint('❌ provinces詳細: ${controller.gameState.provinces}');
+        debugPrint('❌ heroes詳細: ${controller.gameState.heroes}');
         // 初期化が失敗した場合の処理
         if (mounted) {
           debugPrint('🔄 再初期化試行中...');

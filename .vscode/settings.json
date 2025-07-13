@@ -67,7 +67,8 @@
   },
   "github.copilot.chat.agent.autoFix": true,
   "github.copilot.chat.agent.terminal.allowList": {
-    "Flutter analyze": true  
+    "flutter analyze": true,
+    "flutter": true,
   },
   // ファイル自動保存とフォーマット
   "editor.formatOnSave": true,
