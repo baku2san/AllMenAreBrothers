@@ -65,7 +65,10 @@
       "typescript": "spaces"
     }
   },
-  
+  "github.copilot.chat.agent.autoFix": true,
+  "github.copilot.chat.agent.terminal.allowList": {
+    "Flutter analyze": true  
+  },
   // ファイル自動保存とフォーマット
   "editor.formatOnSave": true,
   "editor.formatOnType": true,

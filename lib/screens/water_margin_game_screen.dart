@@ -116,19 +116,15 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
         try {
           await controller.initializeGame();
           await Future.delayed(const Duration(milliseconds: 200));
-          setState(() {
-            _isInitialized = true;
-            _isInitializing = false;
-          });
-          debugPrint('🔄 フォールバック初期化完了');
         } catch (fallbackError) {
           debugPrint('❌ フォールバック初期化もエラー: $fallbackError');
-          // 最後の手段: 強制的に初期化フラグを立てる
-          setState(() {
-            _isInitialized = true;
-            _isInitializing = false;
-          });
         }
+        // キャンセル時・エラー時でも必ずUIを更新
+        setState(() {
+          _isInitialized = true;
+          _isInitializing = false;
+        });
+        debugPrint('🔄 フォールバック初期化完了（UI強制更新）');
       }
     }
   }
