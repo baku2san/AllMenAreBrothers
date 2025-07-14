@@ -66,10 +66,6 @@
     }
   },
   "github.copilot.chat.agent.autoFix": true,
-  "github.copilot.chat.agent.terminal.allowList": {
-    "flutter analyze": true,
-    "flutter": true,
-  },
   // ファイル自動保存とフォーマット
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
@@ -129,20 +125,45 @@
     "**/build": true,
     "**/.dart_tool": true
   },
-  "mcp": {
-    "servers": {
-      "imagesorcery": {
-        "command": "uvx",
-        "args": [
-          "imagesorcery-mcp"
-        ]
-      },
-      "playwright": {
-        "command": "npx",
-        "args": [
-          "@playwright/mcp@latest"
-        ]
-      }
-    }
+  // Copilot 指示ファイル・プロンプトファイル関連設定
+  "chat.promptFiles": true,
+  "chat.promptFilesLocations": {
+    ".github/prompts": true,
+    "setup/**/prompts": false
+  },
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    "src/frontend/instructions": false,
+    "src/backend/instructions": false
+  },
+
+  // 各種タスクごとのカスタム指示
+  "github.copilot.chat.reviewSelection.instructions": [
+    { "file": "guidance/backend-review-guidelines.md" },
+    { "file": "guidance/frontend-review-guidelines.md" }
+  ],
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    { "text": "コミットメッセージは50文字以内で簡潔に記述してください。" }
+  ],
+  "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
+    { "text": "必ず主要な変更点リストを含めること。" }
+  ],
+
+  // 過去リクエストの編集方法（Experimental）
+  // "chat.editRequests": "hover" | "inline" | "none"
+  "chat.editRequests": "hover",
+
+
+  // ターミナル自動承認設定（Experimental）
+  "github.copilot.chat.agent.terminal.allowList": {
+    "npm run test": true,
+    "flutter analyze": true,
+    "flutter": true,
+    "/^git (status|log)$/": true
+  },
+  "github.copilot.chat.agent.terminal.denyList": {
+    "rm": true,
+    "rmdir": true
   }
 }

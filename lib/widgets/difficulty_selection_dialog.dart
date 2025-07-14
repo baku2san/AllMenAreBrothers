@@ -193,8 +193,7 @@ class _DifficultySelectionDialogState extends State<DifficultySelectionDialog> {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () {
-                        widget.onDifficultySelected(_selectedDifficulty);
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(_selectedDifficulty);
                       },
                       child: const Text('この難易度で開始'),
                     ),
