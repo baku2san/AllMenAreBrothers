@@ -77,13 +77,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
           color: Colors.red, // 背景色で描画範囲を可視化
           child: Stack(
             children: [
-              // デバッグ用: 常に見えるはずの青い背景
-              Positioned.fill(
-                child: Container(
-                  color: Colors.blue.withValues(alpha: 0.2),
-                  child: const Center(child: Text('DEBUG BG', style: TextStyle(fontSize: 40, color: Colors.white))),
-                ),
-              ),
+              // ...existing code...
               // 背景のマップタイトル
               Positioned(
                 top: 16,

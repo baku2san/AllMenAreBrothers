@@ -8,8 +8,9 @@ import 'package:flutter/material.dart' hide Hero;
 import '../data/water_margin_map.dart';
 import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../models/enhanced_game_systems.dart' as enhanced_game;
 import '../models/advanced_battle_system.dart';
-import '../models/improved_battle_system.dart';
+import '../models/improved_battle_system.dart' as improved_battle;
 import '../models/diplomacy_system.dart';
 import '../models/game_difficulty.dart';
 import '../services/game_save_service.dart';
@@ -219,12 +220,29 @@ class WaterMarginGameController extends ChangeNotifier {
   }
 
   /// 州を開発
+  /// 州を開発（人口依存コスト版）
   void developProvince(String provinceId, DevelopmentType type) {
     final province = _gameState.provinces[provinceId];
     if (province == null || province.controller != Faction.liangshan) return;
 
-    // 難易度に応じたコスト計算
-    final cost = _difficultySettings?.getDevelopmentCost() ?? AppConstants.developmentCost;
+    // 人口依存型コスト計算
+    final currentLevel = () {
+      switch (type) {
+        case DevelopmentType.agriculture:
+          return province.state.agriculture;
+        case DevelopmentType.commerce:
+          return province.state.commerce;
+        case DevelopmentType.military:
+          return province.state.military;
+        case DevelopmentType.security:
+          return province.state.security;
+      }
+    }();
+    final cost = enhanced_game.EnhancedDevelopmentSystem.calculateDevelopmentCost(
+      currentLevel,
+      type,
+      province.state.population,
+    );
     if (_gameState.playerGold < cost) {
       _addEventLog('資金が不足しています（必要: $cost両）', toastType: ToastType.error);
       return;
@@ -264,7 +282,7 @@ class WaterMarginGameController extends ChangeNotifier {
 
     _gameState = _gameState.copyWith(
       provinces: updatedProvinces,
-      playerGold: _gameState.playerGold - cost,
+      playerGold: (_gameState.playerGold - cost).toInt(),
     );
 
     notifyListeners();
@@ -561,7 +579,7 @@ class WaterMarginGameController extends ChangeNotifier {
     final attackerHeroes = _getHeroesInProvince(sourceProvince.id);
     final defenderHeroes = _getHeroesInProvince(targetProvince.id);
 
-    final battleResult = ImprovedBattleSystem.executeBattle(
+    final battleResult = improved_battle.ImprovedBattleSystem.executeBattle(
       attackerProvince: sourceProvince,
       defenderProvince: targetProvince,
       attackerHeroes: attackerHeroes,
@@ -812,25 +830,26 @@ class WaterMarginGameController extends ChangeNotifier {
   }
 
   /// 戦闘結果タイプの説明を取得
-  String _getBattleResultDescription(BattleResultType result) {
+  String _getBattleResultDescription(improved_battle.BattleResultType result) {
     switch (result) {
-      case BattleResultType.victory:
+      case improved_battle.BattleResultType.victory:
         return '勝利';
-      case BattleResultType.defeat:
+      case improved_battle.BattleResultType.defeat:
         return '敗北';
-      case BattleResultType.pyrrhicVictory:
+      case improved_battle.BattleResultType.pyrrhicVictory:
         return '辛勝';
-      case BattleResultType.tacticalRetreat:
+      case improved_battle.BattleResultType.tacticalRetreat:
         return '戦術的撤退';
-      case BattleResultType.surrender:
+      case improved_battle.BattleResultType.surrender:
         return '降伏';
-      case BattleResultType.stalemate:
+      case improved_battle.BattleResultType.stalemate:
         return '膠着状態';
     }
   }
 
   /// 改良戦闘システムの結果を適用
-  void _applyImprovedBattleResult(DetailedBattleResult result, String sourceProvinceId, String targetProvinceId) {
+  void _applyImprovedBattleResult(
+      improved_battle.DetailedBattleResult result, String sourceProvinceId, String targetProvinceId) {
     final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
 
     // 攻撃側の損失を反映
@@ -865,9 +884,9 @@ class WaterMarginGameController extends ChangeNotifier {
     // 戦闘結果をログに記録
     if (result.territoryChanged) {
       _addEventLog('${targetProvince.name}を占領しました！');
-    } else if (result.result == BattleResultType.tacticalRetreat) {
+    } else if (result.result == improved_battle.BattleResultType.tacticalRetreat) {
       _addEventLog('戦術的撤退により損失を最小化しました');
-    } else if (result.result == BattleResultType.stalemate) {
+    } else if (result.result == improved_battle.BattleResultType.stalemate) {
       _addEventLog('膠着状態で戦闘が終了しました');
     }
 
@@ -891,15 +910,16 @@ class WaterMarginGameController extends ChangeNotifier {
 
   /// DetailedBattleResultをAdvancedBattleResultに変換（UIとの互換性のため）
   AdvancedBattleResult _convertToAdvancedBattleResult(
-    DetailedBattleResult result,
+    improved_battle.DetailedBattleResult result,
     Province sourceProvince,
     Province targetProvince,
   ) {
     // 勝者の決定
     Faction winner;
-    if (result.result == BattleResultType.victory || result.result == BattleResultType.pyrrhicVictory) {
+    if (result.result == improved_battle.BattleResultType.victory ||
+        result.result == improved_battle.BattleResultType.pyrrhicVictory) {
       winner = sourceProvince.controller; // 攻撃側勝利
-    } else if (result.result == BattleResultType.defeat) {
+    } else if (result.result == improved_battle.BattleResultType.defeat) {
       winner = targetProvince.controller; // 防御側勝利
     } else {
       winner = targetProvince.controller; // 膠着・撤退の場合は防御側の勝利扱い

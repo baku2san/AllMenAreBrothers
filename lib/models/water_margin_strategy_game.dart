@@ -246,8 +246,9 @@ class ProvinceState {
   /// 兵糧不足判定用（現在備蓄 < 2ヶ月分消費量）
   bool isLowOnFood(int troops) => food < getFoodConsumption(troops) * 2;
 
-  /// 税収（人口 x 商業度）
-  int get taxIncome => ((population / 100) * commerce).round();
+  /// 税収（人口・商業度バランス調整版）
+  /// 人口の影響を抑え、商業度の絶対値も加算する
+  int get taxIncome => ((population / 200) * commerce + commerce * 2).round();
 
   /// 兵力上限（人口 x 軍事力 / 5、より現実的な計算）
   int get maxTroops => ((population / 100) * (military + 20) / 3).round().clamp(50, 5000);

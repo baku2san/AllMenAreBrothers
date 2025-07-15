@@ -263,10 +263,16 @@ class EnhancedDevelopmentSystem {
   static const int maxDevelopmentLevel = 200;
 
   /// 開発コストの計算（現在値に応じて増加）
-  static int calculateDevelopmentCost(int currentLevel, DevelopmentType type) {
+  /// 開発コスト計算（人口依存型）
+  /// [currentLevel]: 現在の開発レベル
+  /// [type]: 開発種別
+  /// [population]: 州の人口（万人単位）
+  static int calculateDevelopmentCost(int currentLevel, DevelopmentType type, int population) {
     final baseCost = _getBaseCost(type);
     final levelMultiplier = 1 + (currentLevel / 50); // 50レベルごとに2倍
-    return (baseCost * levelMultiplier).toInt();
+    // 人口依存係数: 100万人ごとに+10%コスト増（例: 500万人→+50%）
+    final popMultiplier = 1 + (population / 1000 * 1.0 * 0.1); // populationは万人単位
+    return (baseCost * levelMultiplier * popMultiplier).round();
   }
 
   static int _getBaseCost(DevelopmentType type) {
