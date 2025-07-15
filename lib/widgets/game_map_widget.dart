@@ -74,7 +74,17 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     try {
       return SizedBox.expand(
         child: Container(
-          color: Colors.red, // 背景色で描画範囲を可視化
+          //color: Colors.red, // 背景色で描画範囲を可視化
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.brown.shade100,
+                Colors.green.shade50,
+              ],
+            ),
+          ),
           child: Stack(
             children: [
               // ...existing code...
@@ -170,22 +180,8 @@ class _GameMapWidgetState extends State<GameMapWidget> {
         : null;
 
     if (selectedProvince == null) return const SizedBox();
-
-    // 一時的にCustomPaintを無効化してテスト
-    debugPrint('🔧 AdjacencyLines構築中（CustomPaint無効化テスト）...');
-
-    return Container(
-      width: mapWidth,
-      height: mapHeight,
-      color: Colors.blue.withValues(alpha: 0.05),
-      child: const Center(
-        child: Text(
-          '隣接関係線\n（テスト表示）',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.blue),
-        ),
-      ),
-    );
+    // テスト用のダミー表示を削除し、何も描画しない（または本来のCustomPaint等に戻す）
+    return const SizedBox();
   }
 
   /// 州マーカーの構築
