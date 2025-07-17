@@ -3,7 +3,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../models/water_margin_strategy_game.dart';
 
 /// ゲームマップウィジェット
@@ -77,10 +76,10 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     return SizedBox.expand(
       child: Stack(
         children: [
-          // SVG地図を最背面に表示
+          // PNG地図画像を最背面に表示
           Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/map/china_simple.svg',
+            child: Image.asset(
+              'assets/map/china_outline.png',
               fit: BoxFit.contain,
             ),
           ),
