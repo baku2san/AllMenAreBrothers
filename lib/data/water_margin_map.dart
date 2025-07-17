@@ -38,7 +38,7 @@ class WaterMarginMap {
   static const Province _liangshan = Province(
     id: 'liangshan',
     name: '梁山泊',
-    position: Offset(0.4, 0.5), // マップ中央
+    position: Offset(0.57, 0.37), // SVG梁山湖の位置
     controller: Faction.liangshan,
     state: ProvinceState(
       population: 50, // 比較的少ない人口
@@ -61,7 +61,7 @@ class WaterMarginMap {
   static const Province _kaifeng = Province(
     id: 'kaifeng',
     name: '開封府',
-    position: Offset(0.5, 0.4),
+    position: Offset(0.50, 0.30),
     controller: Faction.imperial,
     state: ProvinceState(
       population: 500, // 大都市
@@ -81,7 +81,7 @@ class WaterMarginMap {
   static const Province _luoyang = Province(
     id: 'luoyang',
     name: '洛陽城',
-    position: Offset(0.3, 0.3),
+    position: Offset(0.37, 0.30),
     controller: Faction.imperial,
     state: ProvinceState(
       population: 300,
@@ -100,7 +100,7 @@ class WaterMarginMap {
   static const Province _changan = Province(
     id: 'changan',
     name: '長安城',
-    position: Offset(0.1, 0.2),
+    position: Offset(0.17, 0.23),
     controller: Faction.imperial,
     state: ProvinceState(
       population: 250,
@@ -120,7 +120,7 @@ class WaterMarginMap {
   static const Province _jizhou = Province(
     id: 'jizhou',
     name: '濟州府',
-    position: Offset(0.4, 0.6),
+    position: Offset(0.57, 0.50),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 200,
@@ -138,7 +138,7 @@ class WaterMarginMap {
   static const Province _qingzhou = Province(
     id: 'qingzhou',
     name: '青州府',
-    position: Offset(0.6, 0.5),
+    position: Offset(0.70, 0.42),
     controller: Faction.warlord,
     state: ProvinceState(
       population: 180,
@@ -156,7 +156,7 @@ class WaterMarginMap {
   static const Province _dengzhou = Province(
     id: 'dengzhou',
     name: '登州府',
-    position: Offset(0.7, 0.4),
+    position: Offset(0.83, 0.33),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 150,
@@ -175,7 +175,7 @@ class WaterMarginMap {
   static const Province _daming = Province(
     id: 'daming',
     name: '大名府',
-    position: Offset(0.5, 0.2),
+    position: Offset(0.43, 0.20),
     controller: Faction.warlord,
     state: ProvinceState(
       population: 220,
@@ -193,7 +193,7 @@ class WaterMarginMap {
   static const Province _taiyuan = Province(
     id: 'taiyuan',
     name: '太原府',
-    position: Offset(0.3, 0.1),
+    position: Offset(0.30, 0.17),
     controller: Faction.warlord,
     state: ProvinceState(
       population: 190,
@@ -212,7 +212,7 @@ class WaterMarginMap {
   static const Province _yanan = Province(
     id: 'yanan',
     name: '延安府',
-    position: Offset(0.2, 0.1),
+    position: Offset(0.20, 0.13),
     controller: Faction.bandit,
     state: ProvinceState(
       population: 120,
@@ -231,7 +231,7 @@ class WaterMarginMap {
   static const Province _chengdu = Province(
     id: 'chengdu',
     name: '成都府',
-    position: Offset(0.1, 0.6),
+    position: Offset(0.13, 0.53),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 280,
@@ -250,7 +250,7 @@ class WaterMarginMap {
   static const Province _hangzhou = Province(
     id: 'hangzhou',
     name: '杭州府',
-    position: Offset(0.7, 0.8),
+    position: Offset(0.83, 0.83),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 250,
@@ -269,7 +269,7 @@ class WaterMarginMap {
   static const Province _yingtian = Province(
     id: 'yingtian',
     name: '応天府',
-    position: Offset(0.6, 0.7),
+    position: Offset(0.70, 0.70),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 300,
@@ -287,7 +287,7 @@ class WaterMarginMap {
   static const Province _datong = Province(
     id: 'datong',
     name: '大同府',
-    position: Offset(0.4, 0.05),
+    position: Offset(0.40, 0.10),
     controller: Faction.warlord,
     state: ProvinceState(
       population: 150,
@@ -306,7 +306,7 @@ class WaterMarginMap {
   static const Province _yangzhou = Province(
     id: 'yangzhou',
     name: '揚州府',
-    position: Offset(0.8, 0.6),
+    position: Offset(0.87, 0.67),
     controller: Faction.neutral,
     state: ProvinceState(
       population: 220,
