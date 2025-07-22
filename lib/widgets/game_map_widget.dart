@@ -1,11 +1,58 @@
-/// ゲームマップ表示ウィジェット
-/// 州の配置とプレイヤーの操作を処理
-library;
-
+//
+// import文はファイル最上部にまとめる
+//
 import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
 
-/// ゲームマップウィジェット
+/// 全州の接続線を描画するPainter
+class AllAdjacencyLinePainter extends CustomPainter {
+  /// 州の隣接線を描画するカスタムペインター
+  /// [provinces]: 州データのマップ
+  /// [mapArea]: マップの描画エリアサイズ
+  const AllAdjacencyLinePainter({
+    required this.provinces,
+    required this.mapArea,
+  });
+
+  final Map<String, Province> provinces;
+  final Size mapArea;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final drawn = <String>{};
+    for (final province in provinces.values) {
+      final center = Offset(
+        mapArea.width * province.position.dx,
+        mapArea.height * province.position.dy,
+      );
+      for (final adjId in province.adjacentProvinceIds) {
+        // 逆方向の重複線を防ぐ
+        final key = [province.id, adjId]..sort();
+        final keyStr = key.join('-');
+        if (drawn.contains(keyStr)) continue;
+        final adj = provinces[adjId];
+        if (adj == null) continue;
+        final adjCenter = Offset(
+          mapArea.width * adj.position.dx,
+          mapArea.height * adj.position.dy,
+        );
+        final paint = Paint()
+          ..color = Colors.grey.withAlpha(128) // 半透明
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke;
+        canvas.drawLine(center, adjCenter, paint);
+        drawn.add(keyStr);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant AllAdjacencyLinePainter oldDelegate) {
+    return provinces != oldDelegate.provinces || mapArea != oldDelegate.mapArea;
+  }
+}
+
+
 class GameMapWidget extends StatefulWidget {
   const GameMapWidget({
     super.key,
@@ -73,6 +120,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     debugPrint('🧪 Stackサイズ: width=$mapWidth, height=$mapHeight');
 
     // メインWidgetツリー
+
     return SizedBox.expand(
       child: Stack(
         children: [
@@ -143,55 +191,17 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     );
   }
 
+
   /// 隣接関係の線を描画
   Widget _buildAdjacencyLines(double mapWidth, double mapHeight) {
-    // 旧ロジックは不要
-    return const SizedBox();
-/// 全州の接続線を描画するPainter
-class AllAdjacencyLinePainter extends CustomPainter {
-  const AllAdjacencyLinePainter({
-    required this.provinces,
-    required this.mapArea,
-  });
-
-  final Map<String, Province> provinces;
-  final Size mapArea;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final drawn = <String>{};
-    for (final province in provinces.values) {
-      final center = Offset(
-        mapArea.width * province.position.dx,
-        mapArea.height * province.position.dy,
-      );
-      for (final adjId in province.adjacentProvinceIds) {
-        // 逆方向の重複線を防ぐ
-        final key = [province.id, adjId]..sort();
-        final keyStr = key.join('-');
-        if (drawn.contains(keyStr)) continue;
-        final adj = provinces[adjId];
-        if (adj == null) continue;
-        final adjCenter = Offset(
-          mapArea.width * adj.position.dx,
-          mapArea.height * adj.position.dy,
-        );
-        final paint = Paint()
-          ..color = Colors.grey.withValues(alpha: 0.5)
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke;
-        canvas.drawLine(center, adjCenter, paint);
-        drawn.add(keyStr);
-      }
-    }
+    return CustomPaint(
+      painter: AllAdjacencyLinePainter(
+        provinces: widget.gameState.provinces,
+        mapArea: Size(mapWidth, mapHeight),
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant AllAdjacencyLinePainter oldDelegate) {
-    return provinces != oldDelegate.provinces;
-  }
-}
-  }
 
   /// 州マーカーの構築
   Widget _buildProvinceMarker(Province province, double mapWidth, double mapHeight) {
