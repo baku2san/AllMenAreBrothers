@@ -1,6 +1,4 @@
-/// 水滸伝戦略ゲーム専用モデル
-/// フェーズ1: 基盤システム（マップ表示とUI基盤、基本的な英雄・勢力データ、シンプルな内政システム）
-library;
+// ...existing code...
 
 import 'package:flutter/material.dart';
 import 'diplomacy_system.dart';
@@ -139,6 +137,8 @@ class Hero {
       'experience': experience,
     };
   }
+
+  /// ゲームの状態を管理するクラス
 
   /// JSONからのfromJsonファクトリコンストラクタ
   factory Hero.fromJson(Map<String, dynamic> json) {
@@ -305,6 +305,38 @@ class Province {
   final bool capital; // 首都かどうか
   final String? specialFeature; // 特殊な特徴
   final int garrison; // 駐屯兵力
+
+  /// 税収（設計に基づく）
+  double taxIncome({double taxRate = 0.1, double factionBonus = 1.0}) {
+    // 税収 = (人口 × 税率 × 民心 × 治安) × 勢力補正
+    final pop = state.population.toDouble();
+    final publicSupport = state.loyalty / 100.0;
+    final security = state.security / 100.0;
+    return pop * taxRate * publicSupport * security * factionBonus;
+  }
+
+  /// 農業収穫量（設計に基づく）
+  double agricultureYield(
+      {double techBonus = 1.0,
+      double weatherBonus = 1.0,
+      double disasterBonus = 1.0,
+      double publicSupportBonus = 1.0}) {
+    // 農業収穫量 = (農業力 × 人口 × 技術補正 × 天候補正 × 災害補正) × 民心補正
+    final agri = state.agriculture.toDouble();
+    final pop = state.population.toDouble();
+    final publicSupport = state.loyalty / 100.0 * publicSupportBonus;
+    return agri * pop * techBonus * weatherBonus * disasterBonus * publicSupport;
+  }
+
+  /// 商業収益（設計に基づく）
+  double commerceIncome(
+      {double securityBonus = 1.0, int tradeRoutes = 1, double friendshipBonus = 1.0, double marketBonus = 1.0}) {
+    // 商業収益 = (商業力 × 人口 × 治安補正 × 交易路数 × 他州友好度) × 市場補正
+    final comm = state.commerce.toDouble();
+    final pop = state.population.toDouble();
+    final security = state.security / 100.0 * securityBonus;
+    return comm * pop * security * tradeRoutes * friendshipBonus * marketBonus;
+  }
 
   /// 隣接州のリスト（AIシステム互換性のため）
   List<String> get neighbors => adjacentProvinceIds;

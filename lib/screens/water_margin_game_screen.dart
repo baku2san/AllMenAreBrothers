@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'province_detail_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/water_margin_game_controller.dart';
@@ -335,7 +336,7 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
                                   ),
 
                                   // マップ凡例（より洗練されたデザイン）
-                                  if (controller.selectedProvince != null)
+                                  if (controller.selectedProvince != null) ...[
                                     Container(
                                       margin: EdgeInsets.fromLTRB(
                                         ModernSpacing.md,
@@ -361,6 +362,18 @@ class _WaterMarginGameViewState extends State<_WaterMarginGameView> {
                                         ),
                                       ),
                                     ),
+                                    // 州詳細画面（経済コマンドUI）
+                                    SizedBox(
+                                      height: 320,
+                                      child: ProvinceDetailScreen(
+                                        province: controller.selectedProvince!,
+                                        gameState: controller.gameState,
+                                        onGameStateUpdated: (newState) {
+                                          controller.updateGameState(newState);
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

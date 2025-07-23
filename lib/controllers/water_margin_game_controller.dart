@@ -20,6 +20,12 @@ import '../widgets/toast_notification.dart';
 
 /// 水滸伝戦略ゲームのメインコントローラー
 class WaterMarginGameController extends ChangeNotifier {
+  /// ゲーム状態を外部から更新する
+  void updateGameState(WaterMarginGameState newState) {
+    _gameState = newState;
+    notifyListeners();
+  }
+
   /// コンストラクタ
   WaterMarginGameController();
 

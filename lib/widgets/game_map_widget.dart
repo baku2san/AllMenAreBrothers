@@ -52,7 +52,6 @@ class AllAdjacencyLinePainter extends CustomPainter {
   }
 }
 
-
 class GameMapWidget extends StatefulWidget {
   const GameMapWidget({
     super.key,
@@ -191,7 +190,6 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     );
   }
 
-
   /// 隣接関係の線を描画
   Widget _buildAdjacencyLines(double mapWidth, double mapHeight) {
     return CustomPaint(
@@ -201,7 +199,6 @@ class _GameMapWidgetState extends State<GameMapWidget> {
       ),
     );
   }
-
 
   /// 州マーカーの構築
   Widget _buildProvinceMarker(Province province, double mapWidth, double mapHeight) {
@@ -227,6 +224,11 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     final isAdjacent = selectedProvince != null && selectedProvince.adjacentProvinceIds.contains(province.id);
     final isAttackable =
         isAdjacent && selectedProvince.controller == Faction.liangshan && province.controller != Faction.liangshan;
+
+    // 経済値の取得（省略可能な補正値はデフォルト）
+    final double tax = province.taxIncome();
+    final double agri = province.agricultureYield();
+    final double comm = province.commerceIncome();
 
     return Positioned(
       left: position.dx,
@@ -288,6 +290,14 @@ class _GameMapWidgetState extends State<GameMapWidget> {
                     color: isSelected ? Colors.black : Colors.white,
                   ),
                 ),
+
+              // 経済値表示（プレイヤー州または選択州のみ）
+              if (isPlayerProvince || isSelected) ...[
+                SizedBox(height: 2),
+                Text('税収: ${tax.toStringAsFixed(0)}', style: TextStyle(fontSize: 8, color: Colors.white)),
+                Text('農業: ${agri.toStringAsFixed(0)}', style: TextStyle(fontSize: 8, color: Colors.white)),
+                Text('商業: ${comm.toStringAsFixed(0)}', style: TextStyle(fontSize: 8, color: Colors.white)),
+              ],
             ],
           ),
         ),
