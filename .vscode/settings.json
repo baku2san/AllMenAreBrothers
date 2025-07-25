@@ -71,7 +71,7 @@
   "editor.formatOnType": true,
   "editor.formatOnPaste": true,
   "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 1000,
+  "files.autoSaveDelay": 5000,
   
   // Dartの自動インポート
   "dart.autoImportCompletions": true,
@@ -131,6 +131,11 @@
     ".github/prompts": true,
     "setup/**/prompts": false
   },
+  "chat.agent.enabled": true, // GitHub Copilot Agentモードを有効化
+  "chat.tools.autoApprove": true, // 提案を自動承認する
+  "chat.extensionTools.enabled": true, // 拡張機能ツールを有効化  
+  "chat.editing.autoAcceptDelay": 1,
+
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "chat.instructionsFilesLocations": {
     ".github/instructions": true,
