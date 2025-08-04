@@ -1,3 +1,4 @@
+import 'package:water_margin_game/models/province.dart';
 //
 // import文はファイル最上部にまとめる
 //
@@ -21,26 +22,26 @@ class AllAdjacencyLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final drawn = <String>{};
     for (final province in provinces.values) {
-      final center = Offset(
-        mapArea.width * province.position.dx,
-        mapArea.height * province.position.dy,
-      );
-      for (final adjId in province.adjacentProvinceIds) {
+      // final center = Offset(
+      //   mapArea.width * province.position.dx,
+      //   mapArea.height * province.position.dy,
+      // );
+      for (final adjName in province.neighbors) {
         // 逆方向の重複線を防ぐ
-        final key = [province.id, adjId]..sort();
+        final key = [province.name, adjName]..sort();
         final keyStr = key.join('-');
         if (drawn.contains(keyStr)) continue;
-        final adj = provinces[adjId];
+        final adj = provinces[adjName];
         if (adj == null) continue;
-        final adjCenter = Offset(
-          mapArea.width * adj.position.dx,
-          mapArea.height * adj.position.dy,
-        );
-        final paint = Paint()
-          ..color = Colors.grey.withAlpha(128) // 半透明
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke;
-        canvas.drawLine(center, adjCenter, paint);
+        // final adjCenter = Offset(
+        //   mapArea.width * adj.position.dx,
+        //   mapArea.height * adj.position.dy,
+        // );
+        // final paint = Paint()
+        //   ..color = Colors.grey.withAlpha(128) // 半透明
+        //   ..strokeWidth = 2
+        //   ..style = PaintingStyle.stroke;
+        // canvas.drawLine(center, adjCenter, paint);
         drawn.add(keyStr);
       }
     }
@@ -202,28 +203,20 @@ class _GameMapWidgetState extends State<GameMapWidget> {
 
   /// 州マーカーの構築
   Widget _buildProvinceMarker(Province province, double mapWidth, double mapHeight) {
-    final mapArea = Size(mapWidth, mapHeight);
+    // 座標情報が Province にないため仮で (0,0) に配置
+    final position = Offset(0, 0);
 
-    // null安全: dx/dyがnull, NaN, Infiniteの場合は0にフォールバック
-    // dx/dyがnullの場合も考慮（nullなら0.0）
-    final double dx = (province.position.dx.isNaN || province.position.dx.isInfinite) ? 0.0 : (province.position.dx);
-    final double dy = (province.position.dy.isNaN || province.position.dy.isInfinite) ? 0.0 : (province.position.dy);
-    final position = Offset(
-      mapArea.width * dx - 40, // マーカーの半分の幅
-      mapArea.height * dy - 40, // マーカーの半分の高さ
-    );
-    debugPrint('🟩 ${province.name} marker: left=${position.dx}, top=${position.dy}');
-
-    final isSelected = widget.gameState.selectedProvinceId == province.id;
-    final isPlayerProvince = province.controller == Faction.liangshan;
+    final isSelected = widget.gameState.selectedProvinceId == province.name;
+    final isPlayerProvince = widget.gameState.factions[province.name] == Faction.liangshan;
 
     // 隣接関係の表示判定
     final selectedProvince = widget.gameState.selectedProvinceId != null
         ? widget.gameState.provinces[widget.gameState.selectedProvinceId!]
         : null;
-    final isAdjacent = selectedProvince != null && selectedProvince.adjacentProvinceIds.contains(province.id);
-    final isAttackable =
-        isAdjacent && selectedProvince.controller == Faction.liangshan && province.controller != Faction.liangshan;
+    final isAdjacent = selectedProvince != null && selectedProvince.neighbors.contains(province.name);
+    final isAttackable = isAdjacent &&
+        widget.gameState.factions[selectedProvince.name] == Faction.liangshan &&
+        widget.gameState.factions[province.name] != Faction.liangshan;
 
     // 経済値の取得（省略可能な補正値はデフォルト）
     final double tax = province.taxIncome();
@@ -234,7 +227,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
       left: position.dx,
       top: position.dy,
       child: GestureDetector(
-        onTap: () => widget.onProvinceSelected(province.id),
+        onTap: () => widget.onProvinceSelected(province.name),
         child: Container(
           width: 80,
           height: 80,
@@ -264,11 +257,11 @@ class _GameMapWidgetState extends State<GameMapWidget> {
                   size: 16,
                 ),
 
-              // 州のアイコン
-              Text(
-                province.provinceIcon,
-                style: const TextStyle(fontSize: 20),
-              ),
+              // 州のアイコン（未実装）
+              // Text(
+              //   province.provinceIcon,
+              //   style: const TextStyle(fontSize: 20),
+              // ),
 
               // 州名
               Text(
@@ -282,14 +275,14 @@ class _GameMapWidgetState extends State<GameMapWidget> {
               ),
 
               // 兵力表示
-              if (isPlayerProvince || isSelected)
-                Text(
-                  '${province.currentTroops}',
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: isSelected ? Colors.black : Colors.white,
-                  ),
-                ),
+              // if (isPlayerProvince || isSelected)
+              //   Text(
+              //     '${province.currentTroops}',
+              //     style: TextStyle(
+              //       fontSize: 8,
+              //       color: isSelected ? Colors.black : Colors.white,
+              //     ),
+              //   ),
 
               // 経済値表示（プレイヤー州または選択州のみ）
               if (isPlayerProvince || isSelected) ...[
@@ -314,7 +307,7 @@ class _GameMapWidgetState extends State<GameMapWidget> {
     } else if (isAdjacent) {
       return Colors.blue.withValues(alpha: 0.6);
     } else {
-      return province.controller.factionColor.withValues(alpha: 0.8);
+      return widget.gameState.factions[province.name]?.factionColor.withValues(alpha: 0.8) ?? Colors.grey;
     }
   }
 
@@ -357,29 +350,28 @@ class AdjacencyLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final selectedCenter = Offset(
-      mapArea.width * selectedProvince.position.dx,
-      mapArea.height * selectedProvince.position.dy,
-    );
+    // final selectedCenter = Offset(
+    //   mapArea.width * selectedProvince.position.dx,
+    //   mapArea.height * selectedProvince.position.dy,
+    // );
 
-    for (final adjacentId in selectedProvince.adjacentProvinceIds) {
-      final adjacentProvince = allProvinces[adjacentId];
+    for (final adjacentName in selectedProvince.neighbors) {
+      final adjacentProvince = allProvinces[adjacentName];
       if (adjacentProvince == null) continue;
 
-      final adjacentCenter = Offset(
-        mapArea.width * adjacentProvince.position.dx,
-        mapArea.height * adjacentProvince.position.dy,
-      );
+      // final adjacentCenter = Offset(
+      //   mapArea.width * adjacentProvince.position.dx,
+      //   mapArea.height * adjacentProvince.position.dy,
+      // );
 
-      final isAttackable =
-          selectedProvince.controller == Faction.liangshan && adjacentProvince.controller != Faction.liangshan;
+      // final isAttackable = false;
 
-      final paint = Paint()
-        ..color = isAttackable ? Colors.red.withValues(alpha: 0.6) : Colors.blue.withValues(alpha: 0.4)
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke;
+      // final paint = Paint()
+      //   ..color = isAttackable ? Colors.red.withValues(alpha: 0.6) : Colors.blue.withValues(alpha: 0.4)
+      //   ..strokeWidth = 2
+      //   ..style = PaintingStyle.stroke;
 
-      canvas.drawLine(selectedCenter, adjacentCenter, paint);
+      // canvas.drawLine(selectedCenter, adjacentCenter, paint);
     }
   }
 

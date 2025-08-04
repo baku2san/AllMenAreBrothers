@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../models/economic_command.dart';
 import '../services/economic_command_service.dart';
+import '../models/province.dart';
 
 /// 州詳細画面（経済コマンド実行UI付き）
 class ProvinceDetailScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _ProvinceDetailScreenState extends State<ProvinceDetailScreen> {
   void _executeCommand(EconomicCommandType type, {Map<String, dynamic> params = const {}}) {
     final command = EconomicCommand(
       type: type,
-      provinceId: widget.province.id,
+      provinceId: widget.province.name,
       params: params,
     );
     final newState = _service.execute(widget.gameState, command);
@@ -43,12 +44,12 @@ class _ProvinceDetailScreenState extends State<ProvinceDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('人口: ${p.state.population}'),
-            Text('農業度: ${p.state.agriculture}'),
-            Text('商業度: ${p.state.commerce}'),
-            Text('治安: ${p.state.security}'),
-            Text('民心: ${p.state.loyalty}'),
-            Text('軍事力: ${p.state.military}'),
+            Text('人口: ${p.population}'),
+            Text('農業度: ${p.agriculture}'),
+            Text('商業度: ${p.commerce}'),
+            Text('治安: ${p.security}'),
+            Text('民心: ${p.publicSupport}'),
+            Text('軍事力: ${p.military}'),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,

@@ -1,4 +1,5 @@
 // ...existing code...
+import 'province.dart';
 
 import 'package:flutter/material.dart';
 import 'diplomacy_system.dart';
@@ -194,241 +195,6 @@ class Hero {
   }
 }
 
-/// 州の状態
-class ProvinceState {
-  const ProvinceState({
-    required this.population, // 人口
-    required this.agriculture, // 農業度
-    required this.commerce, // 商業度
-    required this.security, // 治安
-    required this.military, // 軍事力
-    required this.loyalty, // 民心
-    this.food = 0, // 備蓄兵糧
-  });
-
-  final int population; // 人口（1-1000万人）
-  final int agriculture; // 農業度（1-100）
-  final int commerce; // 商業度（1-100）
-  final int security; // 治安（1-100）
-  final int military; // 軍事力（1-100）
-  final int loyalty; // 民心（1-100、高いほど支持）
-  final int food; // 備蓄兵糧
-
-  ProvinceState copyWith({
-    int? population,
-    int? agriculture,
-    int? commerce,
-    int? security,
-    int? military,
-    int? loyalty,
-    int? food,
-  }) {
-    return ProvinceState(
-      population: population ?? this.population,
-      agriculture: agriculture ?? this.agriculture,
-      commerce: commerce ?? this.commerce,
-      security: security ?? this.security,
-      military: military ?? this.military,
-      loyalty: loyalty ?? this.loyalty,
-      food: food ?? this.food,
-    );
-  }
-
-  /// 州の総合評価
-  int get overallRating => ((agriculture + commerce + security + military + loyalty) / 5).round();
-
-  /// 食料生産量（人口 x 農業度）
-  int get foodProduction => ((population / 100) * agriculture).round();
-
-  /// 基本兵糧消費量計算用（1兵士あたり月間2兵糧）
-  int getFoodConsumption(int troops) => troops * 2;
-
-  /// 兵糧不足判定用（現在備蓄 < 2ヶ月分消費量）
-  bool isLowOnFood(int troops) => food < getFoodConsumption(troops) * 2;
-
-  /// 税収（人口・商業度バランス調整版）
-  /// 人口の影響を抑え、商業度の絶対値も加算する
-  int get taxIncome => ((population / 200) * commerce + commerce * 2).round();
-
-  /// 兵力上限（人口 x 軍事力 / 5、より現実的な計算）
-  int get maxTroops => ((population / 100) * (military + 20) / 3).round().clamp(50, 5000);
-
-  /// JSON変換用のtoJsonメソッド
-  Map<String, dynamic> toJson() {
-    return {
-      'population': population,
-      'agriculture': agriculture,
-      'commerce': commerce,
-      'security': security,
-      'military': military,
-      'loyalty': loyalty,
-      'food': food,
-    };
-  }
-
-  /// JSONからのfromJsonファクトリコンストラクタ
-  factory ProvinceState.fromJson(Map<String, dynamic> json) {
-    return ProvinceState(
-      population: json['population'] ?? 0,
-      agriculture: json['agriculture'] ?? 0,
-      commerce: json['commerce'] ?? 0,
-      security: json['security'] ?? 0,
-      military: json['military'] ?? 0,
-      loyalty: json['loyalty'] ?? 0,
-      food: json['food'] ?? 0,
-    );
-  }
-}
-
-/// 州（Province）
-class Province {
-  const Province({
-    required this.id,
-    required this.name,
-    required this.position,
-    required this.controller,
-    required this.state,
-    required this.currentTroops,
-    required this.adjacentProvinceIds,
-    this.capital = false,
-    this.specialFeature,
-    this.garrison = 0,
-  });
-
-  final String id;
-  final String name;
-  final Offset position; // マップ上の位置
-  final Faction controller; // 支配勢力
-  final ProvinceState state;
-  final int currentTroops; // 現在の兵力
-  final List<String> adjacentProvinceIds; // 隣接州
-  final bool capital; // 首都かどうか
-  final String? specialFeature; // 特殊な特徴
-  final int garrison; // 駐屯兵力
-
-  /// 税収（設計に基づく）
-  double taxIncome({double taxRate = 0.1, double factionBonus = 1.0}) {
-    // 税収 = (人口 × 税率 × 民心 × 治安) × 勢力補正
-    final pop = state.population.toDouble();
-    final publicSupport = state.loyalty / 100.0;
-    final security = state.security / 100.0;
-    return pop * taxRate * publicSupport * security * factionBonus;
-  }
-
-  /// 農業収穫量（設計に基づく）
-  double agricultureYield(
-      {double techBonus = 1.0,
-      double weatherBonus = 1.0,
-      double disasterBonus = 1.0,
-      double publicSupportBonus = 1.0}) {
-    // 農業収穫量 = (農業力 × 人口 × 技術補正 × 天候補正 × 災害補正) × 民心補正
-    final agri = state.agriculture.toDouble();
-    final pop = state.population.toDouble();
-    final publicSupport = state.loyalty / 100.0 * publicSupportBonus;
-    return agri * pop * techBonus * weatherBonus * disasterBonus * publicSupport;
-  }
-
-  /// 商業収益（設計に基づく）
-  double commerceIncome(
-      {double securityBonus = 1.0, int tradeRoutes = 1, double friendshipBonus = 1.0, double marketBonus = 1.0}) {
-    // 商業収益 = (商業力 × 人口 × 治安補正 × 交易路数 × 他州友好度) × 市場補正
-    final comm = state.commerce.toDouble();
-    final pop = state.population.toDouble();
-    final security = state.security / 100.0 * securityBonus;
-    return comm * pop * security * tradeRoutes * friendshipBonus * marketBonus;
-  }
-
-  /// 隣接州のリスト（AIシステム互換性のため）
-  List<String> get neighbors => adjacentProvinceIds;
-
-  /// 月間兵糧収支（生産 - 消費）
-  int get monthlyFoodBalance => state.foodProduction - state.getFoodConsumption(currentTroops);
-
-  /// 兵糧不足判定
-  bool get isLowOnFood => state.isLowOnFood(currentTroops);
-
-  /// 兵糧備蓄量
-  int get foodReserve => state.food;
-
-  /// 兵糧生産量
-  int get foodProduction => state.foodProduction;
-
-  /// 兵糧消費量
-  int get foodConsumption => state.getFoodConsumption(currentTroops);
-
-  Province copyWith({
-    String? id,
-    String? name,
-    Offset? position,
-    Faction? controller,
-    ProvinceState? state,
-    int? currentTroops,
-    List<String>? adjacentProvinceIds,
-    bool? capital,
-    String? specialFeature,
-    int? garrison,
-  }) {
-    return Province(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      position: position ?? this.position,
-      controller: controller ?? this.controller,
-      state: state ?? this.state,
-      currentTroops: currentTroops ?? this.currentTroops,
-      adjacentProvinceIds: adjacentProvinceIds ?? this.adjacentProvinceIds,
-      capital: capital ?? this.capital,
-      specialFeature: specialFeature ?? this.specialFeature,
-      garrison: garrison ?? this.garrison,
-    );
-  }
-
-  /// 州のアイコン
-  String get provinceIcon {
-    if (capital) return '👑';
-    if (specialFeature != null) return '⭐';
-    return '🏙️';
-  }
-
-  /// JSON変換用のtoJsonメソッド
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'position': {'dx': position.dx, 'dy': position.dy},
-      'controller': controller.name,
-      'state': state.toJson(),
-      'currentTroops': currentTroops,
-      'adjacentProvinceIds': adjacentProvinceIds,
-      'capital': capital,
-      'specialFeature': specialFeature,
-      'garrison': garrison,
-    };
-  }
-
-  /// JSONからのfromJsonファクトリコンストラクタ
-  factory Province.fromJson(Map<String, dynamic> json) {
-    final positionMap = json['position'] ?? {'dx': 0.0, 'dy': 0.0};
-    return Province(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      position: Offset(
-        (positionMap['dx'] ?? 0.0).toDouble(),
-        (positionMap['dy'] ?? 0.0).toDouble(),
-      ),
-      controller: Faction.values.firstWhere(
-        (e) => e.name == json['controller'],
-        orElse: () => Faction.neutral,
-      ),
-      state: ProvinceState.fromJson(json['state'] ?? {}),
-      currentTroops: json['currentTroops'] ?? 0,
-      adjacentProvinceIds: List<String>.from(json['adjacentProvinceIds'] ?? []),
-      capital: json['capital'] ?? false,
-      specialFeature: json['specialFeature'],
-      garrison: json['garrison'] ?? 0,
-    );
-  }
-}
-
 /// ゲーム全体の状態
 class WaterMarginGameState {
   WaterMarginGameState({
@@ -486,11 +252,21 @@ class WaterMarginGameState {
   }
 
   /// プレイヤーが支配する州数
-  int get playerProvinceCount => provinces.values.where((p) => p.controller == Faction.liangshan).length;
+  /// プレイヤーが支配する州数（factionsマップで判定）
+  int get playerProvinceCount {
+    return provinces.values.where((p) {
+      final faction = factions[p.name];
+      return faction == Faction.liangshan;
+    }).length;
+  }
 
-  /// プレイヤーの総兵力
-  int get playerTotalTroops =>
-      provinces.values.where((p) => p.controller == Faction.liangshan).fold(0, (sum, p) => sum + p.currentTroops);
+  /// プレイヤーの総軍事力（military合計）
+  double get playerTotalTroops {
+    return provinces.values.where((p) {
+      final faction = factions[p.name];
+      return faction == Faction.liangshan;
+    }).fold(0.0, (sum, p) => sum + p.military);
+  }
 
   /// 仲間になった英雄数
   int get recruitedHeroCount => heroes.where((h) => h.isRecruited).length;
@@ -623,10 +399,11 @@ extension FactionExtension on Faction {
 }
 
 /// Province拡張
+// ProvinceExtension: 勢力色を WaterMarginGameState の factions マップから取得する用途に限定
 extension ProvinceExtension on Province {
-  /// 支配勢力の色
-  Color get factionColor {
-    return controller.factionColor;
+  Color factionColor(Map<String, Faction> factions) {
+    final faction = factions[name] ?? Faction.neutral;
+    return faction.factionColor;
   }
 }
 

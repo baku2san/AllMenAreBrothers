@@ -2,6 +2,8 @@
 /// 兵糧システム、改良された戦闘システム、英雄管理、兵力移動などを含む
 library;
 
+import '../models/province.dart';
+
 import 'water_margin_strategy_game.dart';
 
 /// 兵糧システム
@@ -14,12 +16,12 @@ class SupplySystem {
 
   /// 州の兵糧消費量を計算
   static int calculateFoodConsumption(Province province) {
-    return province.currentTroops * foodPerSoldierPerTurn;
+    return province.military.toInt() * foodPerSoldierPerTurn;
   }
 
   /// 州の兵糧生産量を計算
   static int calculateFoodProduction(Province province) {
-    return province.state.foodProduction;
+    return province.agriculture.toInt();
   }
 
   /// 兵糧収支を計算
@@ -191,7 +193,7 @@ class TroopMovementSystem {
     required List<String> adjacentIds,
   }) {
     // 隣接チェック
-    if (!sourceProvince.adjacentProvinceIds.contains(targetProvince.id)) {
+    if (!sourceProvince.neighbors.contains(targetProvince.name)) {
       return MovementResult(
         success: false,
         message: '${targetProvince.name}は${sourceProvince.name}に隣接していません',
@@ -199,7 +201,7 @@ class TroopMovementSystem {
     }
 
     // 兵力不足チェック
-    if (sourceProvince.currentTroops < troopCount) {
+    if (sourceProvince.military < troopCount) {
       return MovementResult(
         success: false,
         message: '${sourceProvince.name}には$troopCount 人の兵力がありません',

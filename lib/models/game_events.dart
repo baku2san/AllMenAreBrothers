@@ -2,6 +2,8 @@
 /// フェーズ2: イベント基盤、英雄との出会い、歴史的イベント
 library;
 
+import '../data/water_margin_map.dart';
+
 import '../models/water_margin_strategy_game.dart' hide Hero;
 
 /// イベントの種類
@@ -96,9 +98,11 @@ class EventRequirements {
     if (minGold != null && gameState.playerGold < minGold!) return false;
 
     if (requiredProvinces != null) {
-      final controlledProvinces =
-          gameState.provinces.values.where((p) => p.controller == Faction.liangshan).map((p) => p.id).toSet();
-      if (!requiredProvinces!.every((id) => controlledProvinces.contains(id))) {
+      final controlledProvinces = gameState.provinces.values
+          .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == Faction.liangshan.name)
+          .map((p) => p.name)
+          .toSet();
+      if (!requiredProvinces!.every((name) => controlledProvinces.contains(name))) {
         return false;
       }
     }

@@ -2,6 +2,8 @@
 /// フェーズ2: 一騎討ち、水戦、攻城戦など多様な戦闘
 library;
 
+import '../models/province.dart';
+
 import '../models/water_margin_strategy_game.dart' as game show Hero;
 import '../models/water_margin_strategy_game.dart' hide Hero;
 
@@ -130,7 +132,7 @@ class AdvancedBattleSystem {
   }) {
     // 地形効果を計算
     final terrainModifier = _calculateTerrainModifier(terrain, battleType);
-    
+
     // 戦術効果を計算
     final tacticModifier = _calculateTacticModifier(
       attackerTactic ?? BattleTactic.frontalAssault,
@@ -174,7 +176,7 @@ class AdvancedBattleSystem {
   ) {
     final winner = attackerPower > defenderPower ? attacker.faction : defender.faction;
     final powerDiff = (attackerPower - defenderPower).abs();
-    
+
     // 損失を計算
     final attackerLosses = _calculateLosses(attacker.troops, powerDiff, winner == attacker.faction);
     final defenderLosses = _calculateLosses(defender.troops, powerDiff, winner == defender.faction);
@@ -206,14 +208,12 @@ class AdvancedBattleSystem {
     }
 
     // 最強の英雄同士で一騎討ち
-    final attackerChampion = attacker.heroes.reduce((a, b) => 
-        a.stats.combatPower > b.stats.combatPower ? a : b);
-    final defenderChampion = defender.heroes.reduce((a, b) => 
-        a.stats.combatPower > b.stats.combatPower ? a : b);
+    final attackerChampion = attacker.heroes.reduce((a, b) => a.stats.combatPower > b.stats.combatPower ? a : b);
+    final defenderChampion = defender.heroes.reduce((a, b) => a.stats.combatPower > b.stats.combatPower ? a : b);
 
     final attackerPower = attackerChampion.stats.combatPower;
     final defenderPower = defenderChampion.stats.combatPower;
-    
+
     final winner = attackerPower > defenderPower ? attacker.faction : defender.faction;
     final duelWinner = winner == attacker.faction ? attackerChampion : defenderChampion;
 
@@ -249,10 +249,10 @@ class AdvancedBattleSystem {
   ) {
     // 守備側に要塞ボーナス
     final fortifiedDefenderPower = (defenderPower * 1.5).round();
-    
+
     final winner = attackerPower > fortifiedDefenderPower ? attacker.faction : defender.faction;
     final powerDiff = (attackerPower - fortifiedDefenderPower).abs();
-    
+
     final attackerLosses = _calculateLosses(attacker.troops, powerDiff, winner == attacker.faction);
     final defenderLosses = _calculateLosses(defender.troops, powerDiff, winner == defender.faction);
 
@@ -266,9 +266,7 @@ class AdvancedBattleSystem {
       attackerLosses: (attackerLosses * 1.3).round(), // 攻城戦は攻撃側の損失が大きい
       defenderLosses: defenderLosses,
       heroResults: heroResults,
-      specialEvents: winner == attacker.faction 
-          ? ['要塞を陥落させた！']
-          : ['要塞を守り抜いた！'],
+      specialEvents: winner == attacker.faction ? ['要塞を陥落させた！'] : ['要塞を守り抜いた！'],
       territoryConquered: winner == attacker.faction,
     );
   }
@@ -283,13 +281,13 @@ class AdvancedBattleSystem {
     // 水戦では知力も重要
     final attackerIntelligence = attacker.intelligenceBonus;
     final defenderIntelligence = defender.intelligenceBonus;
-    
+
     final modifiedAttackerPower = attackerPower + (attackerIntelligence * 5);
     final modifiedDefenderPower = defenderPower + (defenderIntelligence * 5);
-    
+
     final winner = modifiedAttackerPower > modifiedDefenderPower ? attacker.faction : defender.faction;
     final powerDiff = (modifiedAttackerPower - modifiedDefenderPower).abs();
-    
+
     final attackerLosses = _calculateLosses(attacker.troops, powerDiff, winner == attacker.faction);
     final defenderLosses = _calculateLosses(defender.troops, powerDiff, winner == defender.faction);
 
@@ -314,7 +312,7 @@ class AdvancedBattleSystem {
       case BattleTerrain.mountains:
         return const TerrainModifier(modifier: 1.2, favorDefender: true);
       case BattleTerrain.forest:
-        return battleType == BattleType.ambush 
+        return battleType == BattleType.ambush
             ? const TerrainModifier(modifier: 1.3, favorDefender: false)
             : const TerrainModifier(modifier: 1.1, favorDefender: true);
       case BattleTerrain.river:
@@ -379,7 +377,7 @@ class AdvancedBattleSystem {
     return heroes.map((hero) {
       final performance = _determineHeroPerformance(hero, factionWon);
       final experienceGained = _calculateExperienceGain(performance);
-      
+
       return HeroBattleResult(
         hero: hero,
         performance: performance,
@@ -392,7 +390,7 @@ class AdvancedBattleSystem {
   /// 英雄のパフォーマンスを決定
   static HeroPerformance _determineHeroPerformance(game.Hero hero, bool factionWon) {
     final combatRating = hero.stats.combatPower;
-    
+
     if (factionWon) {
       if (combatRating > 80) return HeroPerformance.outstanding;
       if (combatRating > 60) return HeroPerformance.good;
@@ -421,14 +419,14 @@ class AdvancedBattleSystem {
   /// 特殊イベントを生成
   static List<String> _generateSpecialEvents(BattleParticipant attacker, BattleParticipant defender) {
     final events = <String>[];
-    
+
     // 英雄の活躍による特殊イベント
     for (final hero in [...attacker.heroes, ...defender.heroes]) {
       if (hero.stats.combatPower > 90) {
         events.add('${hero.nickname}が戦場で大活躍！');
       }
     }
-    
+
     return events;
   }
 }

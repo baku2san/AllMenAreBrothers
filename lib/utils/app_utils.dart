@@ -1,10 +1,10 @@
-/// 水滸伝戦略ゲーム - ユーティリティ関数
-/// アプリケーション全体で使用する共通関数を定義
 library;
 
+import 'package:water_margin_game/models/province.dart';
 import 'package:flutter/material.dart' hide Hero;
 import '../models/water_margin_strategy_game.dart';
 import '../core/app_config.dart';
+import '../data/water_margin_map.dart';
 
 /// 数値関連のユーティリティ
 class NumberUtils {
@@ -341,9 +341,8 @@ class GameUtils {
     Map<String, Province> provinces,
     List<Hero> heroes,
   ) {
-    final playerProvinces = provinces.values
-        .where((p) => p.controller == Faction.liangshan)
-        .length;
+    final playerProvinces =
+        provinces.values.where((p) => WaterMarginMap.initialProvinceFactions[p.name] == Faction.liangshan).length;
     final totalProvinces = provinces.length;
 
     // 勝利条件：全州の80%以上を支配

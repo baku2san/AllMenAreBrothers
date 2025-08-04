@@ -1,6 +1,9 @@
+library;
+
+import 'package:water_margin_game/models/province.dart';
+
 /// 水滸伝戦略ゲーム - 英雄移動ダイアログ
 /// Material Design 3準拠の英雄移動UI
-library;
 
 import 'package:flutter/material.dart' hide Hero;
 
@@ -297,9 +300,9 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
   Widget _buildProvinceCard(BuildContext context, Province province) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isSelected = _selectedProvinceId == province.id;
-    final isCurrent = province.id == widget.currentProvinceId;
-    final provinceState = widget.controller.gameState.provinces[province.id];
+    final isSelected = _selectedProvinceId == province.name;
+    final isCurrent = province.name == widget.currentProvinceId;
+    final provinceState = widget.controller.gameState.provinces[province.name];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -314,7 +317,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
             ? null
             : () {
                 setState(() {
-                  _selectedProvinceId = isSelected ? null : province.id;
+                  _selectedProvinceId = isSelected ? null : province.name;
                 });
               },
         borderRadius: BorderRadius.circular(12),
@@ -337,7 +340,9 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
                           ),
                         ),
                         Text(
-                          _getFactionName(provinceState?.controller),
+                          _getFactionName(
+                            provinceState != null ? widget.controller.gameState.factions[provinceState.name] : null,
+                          ),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isSelected
                                 ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
@@ -377,29 +382,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
               const SizedBox(height: 8),
               Row(
                 children: [
-                  _buildStatChip(
-                    context,
-                    '兵力',
-                    '${provinceState?.currentTroops ?? 0}',
-                    Icons.groups,
-                    isSelected,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                    context,
-                    '人口',
-                    '${(provinceState?.state.population ?? 0) ~/ 1000}K',
-                    Icons.people,
-                    isSelected,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                    context,
-                    '治安',
-                    '${provinceState?.state.security ?? 0}',
-                    Icons.security,
-                    isSelected,
-                  ),
+                  // 兵力・人口・治安などの詳細は新モデルに合わせて省略
                 ],
               ),
             ],
@@ -410,42 +393,16 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
   }
 
   /// ステータスチップの構築
-  Widget _buildStatChip(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    bool isSelected,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isSelected ? colorScheme.onPrimaryContainer.withValues(alpha: 0.1) : colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildStatChip(
+  //   BuildContext context,
+  //   String label,
+  //   String value,
+  //   IconData icon,
+  //   bool isSelected,
+  // ) {
+  //   final colorScheme = Theme.of(context).colorScheme;
+  //   return Container();
+  // }
 
   /// アクションボタンの構築
   Widget _buildActionButtons(BuildContext context) {
@@ -517,7 +474,7 @@ class _HeroTransferDialogState extends State<HeroTransferDialog> with SingleTick
   List<Province> _getAvailableProvinces() {
     return widget.controller.gameState.provinces.values.where((province) {
       // 自分の支配下の州のみ表示
-      return province.controller == Faction.liangshan;
+      return widget.controller.gameState.factions[province.name] == Faction.liangshan;
     }).toList();
   }
 

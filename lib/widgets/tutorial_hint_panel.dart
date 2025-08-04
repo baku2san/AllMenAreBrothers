@@ -1,11 +1,10 @@
-/// 水滸伝戦略ゲーム - チュートリアル・ヒント表示システム
-/// 遊びやすさ向上のためのガイダンス機能
 library;
 
 import 'package:flutter/material.dart';
 import '../models/game_difficulty.dart';
 import '../models/water_margin_strategy_game.dart';
 import '../core/app_theme.dart';
+import '../data/water_margin_map.dart';
 
 /// チュートリアル・ヒントパネル
 class TutorialHintPanel extends StatefulWidget {
@@ -223,7 +222,9 @@ class _TutorialHintPanelState extends State<TutorialHintPanel> with SingleTicker
   Widget _buildProgressIndicator(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final playerProvinces = widget.gameState.provinces.values.where((p) => p.controller == Faction.liangshan).length;
+    final playerProvinces = widget.gameState.provinces.values
+        .where((p) => WaterMarginMap.initialProvinceFactions[p.name] == Faction.liangshan)
+        .length;
     final totalProvinces = widget.gameState.provinces.length;
     final progress = totalProvinces > 0 ? playerProvinces / totalProvinces : 0.0;
 

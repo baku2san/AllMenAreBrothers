@@ -137,7 +137,8 @@ class GameBalanceHelper {
 
   /// プレイヤーの進行状況に基づく動的調整
   static GameBalanceAdjustment calculateDynamicAdjustment(WaterMarginGameState gameState) {
-    final playerProvinces = gameState.provinces.values.where((p) => p.controller == Faction.liangshan).length;
+    final playerProvinces =
+        gameState.provinces.values.where((p) => gameState.factions[p.name] == Faction.liangshan).length;
     final totalProvinces = gameState.provinces.length;
     final progressRatio = playerProvinces / totalProvinces;
 
@@ -186,7 +187,8 @@ class GameBalanceHelper {
       tips.add('💡 資金が不足しています。商業開発で収入を増やしましょう');
     }
 
-    final playerProvinces = gameState.provinces.values.where((p) => p.controller == Faction.liangshan).length;
+    final playerProvinces =
+        gameState.provinces.values.where((p) => gameState.factions[p.name] == Faction.liangshan).length;
     if (playerProvinces >= 5 && gameState.diplomacy == null) {
       tips.add('💡 外交システムを活用して同盟を結びましょう');
     }

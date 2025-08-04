@@ -8,6 +8,7 @@ import 'package:flutter/material.dart' hide Hero;
 import '../data/water_margin_map.dart';
 import '../data/water_margin_heroes.dart';
 import '../models/water_margin_strategy_game.dart';
+import '../models/province.dart';
 import '../models/enhanced_game_systems.dart' as enhanced_game;
 import '../models/advanced_battle_system.dart';
 import '../models/improved_battle_system.dart' as improved_battle;
@@ -15,7 +16,6 @@ import '../models/diplomacy_system.dart';
 import '../models/game_difficulty.dart';
 import '../services/game_save_service.dart';
 import '../core/app_config.dart';
-import '../utils/app_utils.dart';
 import '../widgets/toast_notification.dart';
 
 /// 水滸伝戦略ゲームのメインコントローラー
@@ -229,62 +229,62 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 州を開発（人口依存コスト版）
   void developProvince(String provinceId, DevelopmentType type) {
     final province = _gameState.provinces[provinceId];
-    if (province == null || province.controller != Faction.liangshan) return;
+    if (province == null || WaterMarginMap.initialProvinceFactions[province.name] != Faction.liangshan) return;
 
     // 人口依存型コスト計算
     final currentLevel = () {
       switch (type) {
         case DevelopmentType.agriculture:
-          return province.state.agriculture;
+          return province.agriculture.toInt();
         case DevelopmentType.commerce:
-          return province.state.commerce;
+          return province.commerce.toInt();
         case DevelopmentType.military:
-          return province.state.military;
+          return province.military.toInt();
         case DevelopmentType.security:
-          return province.state.security;
+          return province.security.toInt();
       }
     }();
     final cost = enhanced_game.EnhancedDevelopmentSystem.calculateDevelopmentCost(
       currentLevel,
       type,
-      province.state.population,
+      province.population,
     );
     if (_gameState.playerGold < cost) {
-      _addEventLog('資金が不足しています（必要: $cost両）', toastType: ToastType.error);
+      _addEventLog('資金が不足しています（必要: $cost両）');
       return;
     }
 
     final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
-    var newState = province.state;
+    Province newProvince = province;
 
     switch (type) {
       case DevelopmentType.agriculture:
-        newState = newState.copyWith(
-          agriculture: NumberUtils.clampInt(newState.agriculture + 10, 0, AppConstants.maxDevelopmentLevel),
+        newProvince = province.copyWith(
+          agriculture: (province.agriculture + 10).clamp(0, AppConstants.maxDevelopmentLevel.toDouble()),
         );
-        _addEventLog('${province.name}の農業を発展させました（コスト: $cost両）', toastType: ToastType.success);
+        _addEventLog('${province.name}の農業を発展させました（コスト: $cost両）');
         break;
       case DevelopmentType.commerce:
-        newState = newState.copyWith(
-          commerce: NumberUtils.clampInt(newState.commerce + 10, 0, AppConstants.maxDevelopmentLevel),
+        newProvince = province.copyWith(
+          commerce: (province.commerce + 10).clamp(0, AppConstants.maxDevelopmentLevel.toDouble()),
         );
-        _addEventLog('${province.name}の商業を発展させました（コスト: $cost両）', toastType: ToastType.success);
+        _addEventLog('${province.name}の商業を発展させました（コスト: $cost両）');
         break;
       case DevelopmentType.military:
-        newState = newState.copyWith(
-          military: NumberUtils.clampInt(newState.military + 10, 0, AppConstants.maxDevelopmentLevel),
+        newProvince = province.copyWith(
+          military: (province.military + 10).clamp(0, AppConstants.maxDevelopmentLevel.toDouble()),
         );
-        _addEventLog('${province.name}の軍事を強化しました（コスト: $cost両）', toastType: ToastType.success);
+        _addEventLog('${province.name}の軍事を強化しました（コスト: $cost両）');
         break;
       case DevelopmentType.security:
-        newState = newState.copyWith(
-          security: NumberUtils.clampInt(newState.security + 10, 0, AppConstants.maxDevelopmentLevel),
+        newProvince = province.copyWith(
+          security: (province.security + 10).clamp(0, AppConstants.maxDevelopmentLevel.toDouble()),
         );
-        _addEventLog('${province.name}の治安を改善しました（コスト: $cost両）', toastType: ToastType.success);
+        _addEventLog('${province.name}の治安を改善しました（コスト: $cost両）');
         break;
     }
 
-    updatedProvinces[provinceId] = province.copyWith(state: newState);
+    updatedProvinces[provinceId] = newProvince;
 
     _gameState = _gameState.copyWith(
       provinces: updatedProvinces,
@@ -297,25 +297,26 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 徴兵
   void recruitTroops(String provinceId, int amount) {
     final province = _gameState.provinces[provinceId];
-    if (province == null || province.controller != Faction.liangshan) return;
+    if (province == null || WaterMarginMap.initialProvinceFactions[province.name] != Faction.liangshan) return;
 
     final cost = amount * AppConstants.recruitmentCostPerTroop; // 兵士1人につき10両
     if (_gameState.playerGold < cost) {
-      _addEventLog('徴兵に必要な資金が不足しています', toastType: ToastType.error);
+      _addEventLog('徴兵に必要な資金が不足しています');
       return;
     }
 
-    final maxRecruits = province.state.maxTroops - province.currentTroops;
-    final actualAmount = amount > maxRecruits ? maxRecruits : amount;
+    // 新モデルでは currentTroops, maxTroops を military, population で代用（例: military = 現在兵力, population = 最大兵力の一部）
+    final maxTroops = (province.population * 0.2).toInt(); // 例: 人口の20%まで徴兵可能
+    final actualAmount = math.min(amount, maxTroops - province.military.toInt());
 
     if (actualAmount <= 0) {
-      _addEventLog('${province.name}では兵力が上限に達しています', toastType: ToastType.warning);
+      _addEventLog('${province.name}では兵力が上限に達しています');
       return;
     }
 
     final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
     updatedProvinces[provinceId] = province.copyWith(
-      currentTroops: province.currentTroops + actualAmount,
+      military: province.military + actualAmount.toDouble(),
     );
 
     _gameState = _gameState.copyWith(
@@ -335,7 +336,7 @@ class WaterMarginGameController extends ChangeNotifier {
     );
     final province = _gameState.provinces[provinceId];
 
-    if (province == null || province.controller != Faction.liangshan) return;
+    if (province == null || WaterMarginMap.initialProvinceFactions[province.name] != Faction.liangshan) return;
 
     final updatedHeroes =
         _gameState.heroes.map((h) => h.id == heroId ? h.copyWith(currentProvinceId: provinceId) : h).toList();
@@ -506,8 +507,8 @@ class WaterMarginGameController extends ChangeNotifier {
 
     int totalTradeIncome = 0;
     for (final province in _gameState.provinces.values) {
-      if (province.controller == Faction.liangshan) {
-        totalTradeIncome += diplomacy.calculateTradeIncome(province.id);
+      if (WaterMarginMap.initialProvinceFactions[province.name] == Faction.liangshan) {
+        totalTradeIncome += diplomacy.calculateTradeIncome(province.name);
       }
     }
 
@@ -522,7 +523,7 @@ class WaterMarginGameController extends ChangeNotifier {
   /// 交渉（簡易版）
   void negotiateWithProvince(String provinceId, String negotiationType) {
     final province = _gameState.provinces[provinceId];
-    if (province == null || province.controller == Faction.liangshan) return;
+    if (province == null || WaterMarginMap.initialProvinceFactions[province.name] == Faction.liangshan) return;
 
     final cost = 200; // 交渉費用
     if (_gameState.playerGold < cost) {
@@ -561,29 +562,27 @@ class WaterMarginGameController extends ChangeNotifier {
       _addEventLog('攻撃失敗: 州が選択されていません');
       return;
     }
-    if (sourceProvince.controller != Faction.liangshan) {
+    if (WaterMarginMap.initialProvinceFactions[sourceProvince.name] != Faction.liangshan) {
       _addEventLog('攻撃失敗: ${sourceProvince.name}は梁山泊の州ではありません');
       return;
     }
-    if (targetProvince.controller == Faction.liangshan) {
+    if (WaterMarginMap.initialProvinceFactions[targetProvince.name] == Faction.liangshan) {
       _addEventLog('攻撃失敗: ${targetProvince.name}は味方の州です');
       return;
     }
-    if (sourceProvince.currentTroops <= 0) {
+    if (sourceProvince.military.toInt() <= 0) {
       _addEventLog('攻撃失敗: ${sourceProvince.name}に兵力がありません');
       return;
     }
 
-    // 兵糧チェック
-    if (sourceProvince.isLowOnFood) {
-      _addEventLog('警告: ${sourceProvince.name}の兵糧が不足しています。戦闘力が低下する可能性があります');
-    }
+    // 兵糧チェック（仮実装: ここで警告を出すだけ）
+    // TODO: isLowOnFood 相当の新ロジックを後で実装
 
     _addEventLog('${sourceProvince.name}から${targetProvince.name}への攻撃を開始！');
 
     // 改良戦闘システムを使用
-    final attackerHeroes = _getHeroesInProvince(sourceProvince.id);
-    final defenderHeroes = _getHeroesInProvince(targetProvince.id);
+    final attackerHeroes = _getHeroesInProvince(sourceProvince.name);
+    final defenderHeroes = _getHeroesInProvince(targetProvince.name);
 
     final battleResult = improved_battle.ImprovedBattleSystem.executeBattle(
       attackerProvince: sourceProvince,
@@ -596,10 +595,10 @@ class WaterMarginGameController extends ChangeNotifier {
     // 戦闘結果をログに記録
     _addEventLog('戦闘結果: ${_getBattleResultDescription(battleResult.result)}');
     _addEventLog(battleResult.battleDescription);
-    _addEventLog('味方損失: ${battleResult.attackerLosses}, 敌損失: ${battleResult.defenderLosses}');
+    _addEventLog('味方損失: ${battleResult.attackerLosses}, 敵損失: ${battleResult.defenderLosses}');
 
     // 戦闘結果を反映
-    _applyImprovedBattleResult(battleResult, sourceProvince.id, targetProvince.id);
+    _applyImprovedBattleResult(battleResult, sourceProvince.name, targetProvince.name);
 
     notifyListeners();
   }
@@ -608,8 +607,8 @@ class WaterMarginGameController extends ChangeNotifier {
   int getTotalTroops() {
     int total = 0;
     for (final province in _gameState.provinces.values) {
-      if (province.controller == Faction.liangshan) {
-        total += province.currentTroops;
+      if (WaterMarginMap.initialProvinceFactions[province.name] == Faction.liangshan) {
+        total += province.military.toInt();
       }
     }
     return total;
@@ -617,30 +616,34 @@ class WaterMarginGameController extends ChangeNotifier {
 
   /// プレイヤーの総収入を取得（難易度調整込み）
   int getTotalIncome() {
-    int total = 0;
+    double total = 0;
     for (final province in _gameState.provinces.values) {
-      if (province.controller == Faction.liangshan) {
-        total += province.state.taxIncome;
+      if (WaterMarginMap.initialProvinceFactions[province.name] == Faction.liangshan) {
+        // 新モデルの税収計算式: population × 0.01 × publicSupport × security
+        total += province.population * 0.01 * province.publicSupport * province.security;
       }
     }
 
     // 難易度に応じた収入調整
     if (_difficultySettings != null) {
-      total = _difficultySettings!.calculateIncome(total);
+      total = _difficultySettings!.calculateIncome(total.toInt()).toDouble();
     }
 
     // 動的バランス調整
     final adjustment = GameBalanceHelper.calculateDynamicAdjustment(_gameState);
     if (adjustment.hasAdjustments) {
-      total = (total * (1.0 + adjustment.incomeBonus)).round();
+      total = (total * (1.0 + adjustment.incomeBonus));
     }
 
-    return total;
+    return total.toInt();
   }
 
   /// プレイヤーの州一覧を取得
+  /// プレイヤーの州一覧を取得（新モデル: 勢力判定は WaterMarginMap.initialProvinceFactions で）
   List<Province> getPlayerProvinces() {
-    return _gameState.provinces.values.where((province) => province.controller == Faction.liangshan).toList();
+    return _gameState.provinces.values
+        .where((province) => WaterMarginMap.initialProvinceFactions[province.name] == Faction.liangshan)
+        .toList();
   }
 
   /// イベントログに追加
@@ -858,32 +861,22 @@ class WaterMarginGameController extends ChangeNotifier {
       improved_battle.DetailedBattleResult result, String sourceProvinceId, String targetProvinceId) {
     final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
 
-    // 攻撃側の損失を反映
+    // 攻撃側の損失を反映（military を減算）
     final sourceProvince = updatedProvinces[sourceProvinceId]!;
-    final sourceNewTroops = (sourceProvince.currentTroops - result.attackerLosses).clamp(0, 999999);
+    final sourceNewMilitary = (sourceProvince.military - result.attackerLosses).clamp(0, 999999).toDouble();
     updatedProvinces[sourceProvinceId] = sourceProvince.copyWith(
-      currentTroops: sourceNewTroops,
+      military: sourceNewMilitary,
     );
 
-    // 防御側の損失を反映
+    // 防御側の損失を反映（military を減算）
     final targetProvince = updatedProvinces[targetProvinceId]!;
-    final targetNewTroops = (targetProvince.currentTroops - result.defenderLosses).clamp(0, 999999);
+    final targetNewMilitary = (targetProvince.military - result.defenderLosses).clamp(0, 999999).toDouble();
     updatedProvinces[targetProvinceId] = targetProvince.copyWith(
-      currentTroops: targetNewTroops,
-      controller: result.territoryChanged ? sourceProvince.controller : targetProvince.controller,
+      military: targetNewMilitary,
+      // 勢力変更は WaterMarginMap.initialProvinceFactions で管理するため、ここでは省略
     );
 
-    // 兵糧消費（戦闘による消費）
-    if (sourceProvince.state.food > 0) {
-      final foodConsumption = (result.attackerLosses * 0.1).round().clamp(1, sourceProvince.state.food);
-      final updatedSourceState = sourceProvince.state.copyWith(
-        food: sourceProvince.state.food - foodConsumption,
-      );
-      updatedProvinces[sourceProvinceId] = updatedProvinces[sourceProvinceId]!.copyWith(
-        state: updatedSourceState,
-      );
-      _addEventLog('${sourceProvince.name}で戦闘により兵糧$foodConsumption を消費');
-    }
+    // 兵糧消費ロジックは新モデルでは未実装なのでスキップ
 
     _gameState = _gameState.copyWith(provinces: updatedProvinces);
 
@@ -924,11 +917,11 @@ class WaterMarginGameController extends ChangeNotifier {
     Faction winner;
     if (result.result == improved_battle.BattleResultType.victory ||
         result.result == improved_battle.BattleResultType.pyrrhicVictory) {
-      winner = sourceProvince.controller; // 攻撃側勝利
+      winner = WaterMarginMap.initialProvinceFactions[sourceProvince.name] ?? Faction.neutral; // 攻撃側勝利
     } else if (result.result == improved_battle.BattleResultType.defeat) {
-      winner = targetProvince.controller; // 防御側勝利
+      winner = WaterMarginMap.initialProvinceFactions[targetProvince.name] ?? Faction.neutral; // 防御側勝利
     } else {
-      winner = targetProvince.controller; // 膠着・撤退の場合は防御側の勝利扱い
+      winner = WaterMarginMap.initialProvinceFactions[targetProvince.name] ?? Faction.neutral; // 膠着・撤退の場合は防御側の勝利扱い
     }
 
     return AdvancedBattleResult(
@@ -944,64 +937,14 @@ class WaterMarginGameController extends ChangeNotifier {
 
   /// 兵糧システム処理（毎ターン）
   void _processFoodSystem() {
-    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
-    var foodWarnings = 0;
-    var foodShortages = 0;
-
-    for (final province in _gameState.provinces.values) {
-      if (province.controller == Faction.liangshan) {
-        final currentFood = province.state.food;
-        final foodProduction = province.state.foodProduction;
-        final foodConsumption = province.state.getFoodConsumption(province.currentTroops);
-
-        // 月間兵糧収支
-        final foodBalance = foodProduction - foodConsumption;
-        final newFood = (currentFood + foodBalance).clamp(0, 9999).toInt();
-
-        // 州の兵糧状況を更新
-        final updatedState = province.state.copyWith(food: newFood);
-        updatedProvinces[province.id] = province.copyWith(state: updatedState);
-
-        // 兵糧不足の警告とペナルティ
-        if (newFood <= 0) {
-          foodShortages++;
-          _addEventLog('${province.name}で兵糧が枯渇！民心と治安が低下', toastType: ToastType.error);
-
-          // 兵糧不足ペナルティ：民心・治安低下
-          final penalizedState = updatedState.copyWith(
-            loyalty: (updatedState.loyalty - 5).clamp(0, 100),
-            security: (updatedState.security - 3).clamp(0, 100),
-          );
-          updatedProvinces[province.id] = updatedProvinces[province.id]!.copyWith(state: penalizedState);
-        } else if (province.state.isLowOnFood(province.currentTroops)) {
-          foodWarnings++;
-          _addEventLog('${province.name}の兵糧が不足しています（残り$newFood）', toastType: ToastType.warning);
-        }
-
-        // 兵糧生産と消費のログ（詳細情報）
-        if (foodBalance > 0) {
-          _addEventLog('${province.name}: 兵糧+$foodBalance（生産$foodProduction - 消費$foodConsumption）');
-        } else if (foodBalance < 0) {
-          _addEventLog('${province.name}: 兵糧$foodBalance（生産$foodProduction - 消費$foodConsumption）');
-        }
-      }
-    }
-
-    // 全体的な兵糧状況のサマリー
-    if (foodShortages > 0) {
-      _addEventLog('警告: $foodShortages 州で兵糧が枯渇しています！', toastType: ToastType.error);
-    } else if (foodWarnings > 0) {
-      _addEventLog('注意: $foodWarnings 州で兵糧が不足しています', toastType: ToastType.warning);
-    }
-
-    // 兵糧状況を更新
-    _gameState = _gameState.copyWith(provinces: updatedProvinces);
+    // 新モデルでは兵糧システムは未実装のため、何もしない
+    // TODO: 新 Province モデルに合わせて兵糧システムを再設計する
   }
 
   /// 兵糧補給
   void supplyFood(String provinceId, int amount) {
     final province = _gameState.provinces[provinceId];
-    if (province == null || province.controller != Faction.liangshan) {
+    if (province == null || WaterMarginMap.initialProvinceFactions[province.name] != Faction.liangshan) {
       _addEventLog('兵糧補給失敗: 梁山泊の州ではありません', toastType: ToastType.error);
       return;
     }
@@ -1012,13 +955,8 @@ class WaterMarginGameController extends ChangeNotifier {
       return;
     }
 
-    final updatedProvinces = Map<String, Province>.from(_gameState.provinces);
-    final newFood = province.state.food + amount;
-    final updatedState = province.state.copyWith(food: newFood);
-    updatedProvinces[provinceId] = province.copyWith(state: updatedState);
-
+    // 新モデルでは food フィールドが未実装のため、ここでは資金のみ減算し、イベントログのみ表示
     _gameState = _gameState.copyWith(
-      provinces: updatedProvinces,
       playerGold: _gameState.playerGold - cost,
     );
 
@@ -1038,7 +976,7 @@ class WaterMarginGameController extends ChangeNotifier {
     }
 
     final targetProvince = _gameState.provinces[targetProvinceId];
-    if (targetProvince?.controller != Faction.liangshan) {
+    if (targetProvince == null || WaterMarginMap.initialProvinceFactions[targetProvince.name] != Faction.liangshan) {
       throw StateError('自分の支配下の州にのみ移動できます');
     }
 
@@ -1047,7 +985,7 @@ class WaterMarginGameController extends ChangeNotifier {
     final updatedHeroes = _gameState.heroes.map((h) => h.id == heroId ? updatedHero : h).toList();
 
     _gameState = _gameState.copyWith(heroes: updatedHeroes);
-    _addEventLog('${hero.name}を${targetProvince?.name ?? '不明'}に移動させました');
+    _addEventLog('${hero.name}を${targetProvince.name}に移動させました');
     notifyListeners();
   }
 

@@ -2,6 +2,10 @@
 /// Material Design 3準拠のモダンなUI/UXで英雄の詳細管理を行う
 library;
 
+import '../models/province.dart';
+
+import '../data/water_margin_map.dart';
+
 import 'package:flutter/material.dart' hide Hero;
 import 'package:provider/provider.dart';
 import '../controllers/water_margin_game_controller.dart';
@@ -1180,7 +1184,7 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Ticker
       builder: (context) {
         String? selectedProvinceId;
         final provinces = widget.controller.gameState.provinces.values
-            .where((province) => province.controller == Faction.liangshan)
+            .where((province) => WaterMarginMap.initialProvinceFactions[province.name]?.name == Faction.liangshan.name)
             .toList();
 
         return AlertDialog(
@@ -1200,7 +1204,7 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Ticker
                   ),
                   items: provinces.map((province) {
                     return DropdownMenuItem(
-                      value: province.id,
+                      value: province.name,
                       child: Text(province.name),
                     );
                   }).toList(),
@@ -1436,22 +1440,18 @@ class _HeroManagementScreenState extends State<HeroManagementScreen> with Ticker
     if (provinceId == null) return '未配置';
 
     final province = widget.controller.gameState.provinces.values.firstWhere(
-      (p) => p.id == provinceId,
+      (p) => p.name == provinceId,
       orElse: () => Province(
-        id: '',
         name: '不明',
-        position: const Offset(0, 0),
-        controller: Faction.neutral,
-        state: const ProvinceState(
-          population: 0,
-          agriculture: 0,
-          commerce: 0,
-          security: 0,
-          military: 0,
-          loyalty: 0,
-        ),
-        currentTroops: 0,
-        adjacentProvinceIds: const [],
+        population: 0,
+        agriculture: 0,
+        commerce: 0,
+        security: 0,
+        publicSupport: 0,
+        military: 0,
+        resources: const [],
+        development: 0,
+        neighbors: const [],
       ),
     );
     return province.name;

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/water_margin_map.dart';
 import '../models/water_margin_strategy_game.dart';
 
 /// セーブ/ロード機能を提供するサービス
@@ -110,7 +111,9 @@ class GameSaveService {
             saveTime: saveData.saveTime,
             turn: saveData.gameState.currentTurn,
             playerGold: saveData.gameState.playerGold,
-            playerProvinces: saveData.gameState.provinces.values.where((p) => p.controller == Faction.liangshan).length,
+            playerProvinces: saveData.gameState.provinces.values
+                .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == Faction.liangshan.name)
+                .length,
           ));
         }
       }

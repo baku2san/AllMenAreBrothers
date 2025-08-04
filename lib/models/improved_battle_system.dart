@@ -2,6 +2,8 @@
 /// 現実的な損失率と降伏・撤退システムを実装
 library;
 
+import '../models/province.dart';
+
 import 'dart:math';
 import 'package:flutter/material.dart' show Color, Colors;
 import '../models/water_margin_strategy_game.dart';
@@ -56,8 +58,8 @@ class ImprovedBattleSystem {
     required List<Hero> defenderHeroes,
     required bool isPlayerAttacker,
   }) {
-    final attackerForce = attackerProvince.currentTroops;
-    final defenderForce = defenderProvince.currentTroops;
+    final attackerForce = attackerProvince.military.toInt();
+    final defenderForce = defenderProvince.military.toInt();
 
     if (attackerForce == 0) {
       return DetailedBattleResult(
@@ -214,10 +216,10 @@ class ImprovedBattleSystem {
     double morale = 1.0;
 
     // 民心による士気
-    morale += (province.state.loyalty - 50) / 200; // ±0.25
+    morale += (province.publicSupport * 100 - 50) / 200; // ±0.25
 
     // 兵糧状況による士気
-    if (province.isLowOnFood) {
+    if (province.agriculture < 20) {
       morale -= 0.2; // 兵糧不足でペナルティ
     }
 

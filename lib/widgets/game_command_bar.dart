@@ -2,6 +2,8 @@
 /// Material Design 3準拠の統一されたコマンドインターフェース
 library;
 
+import 'package:water_margin_game/models/province.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -253,8 +255,8 @@ class GameCommandBar extends StatelessWidget {
               cost: '${AppConstants.developmentCost}両',
               tooltip: '農業を向上させます',
               onPressed: gameState.playerGold >= AppConstants.developmentCost &&
-                      selectedProvince.controller == Faction.liangshan
-                  ? () => controller.developProvince(selectedProvince.id, DevelopmentType.agriculture)
+                      controller.gameState.factions[selectedProvince.name] == Faction.liangshan
+                  ? () => controller.developProvince(selectedProvince.name, DevelopmentType.agriculture)
                   : null,
             ),
             const SizedBox(width: 8),
@@ -267,8 +269,8 @@ class GameCommandBar extends StatelessWidget {
               cost: '${AppConstants.developmentCost}両',
               tooltip: '商業を向上させます',
               onPressed: gameState.playerGold >= AppConstants.developmentCost &&
-                      selectedProvince.controller == Faction.liangshan
-                  ? () => controller.developProvince(selectedProvince.id, DevelopmentType.commerce)
+                      controller.gameState.factions[selectedProvince.name] == Faction.liangshan
+                  ? () => controller.developProvince(selectedProvince.name, DevelopmentType.commerce)
                   : null,
             ),
             const SizedBox(width: 8),
@@ -281,8 +283,8 @@ class GameCommandBar extends StatelessWidget {
               cost: '${AppConstants.recruitmentCostPerTroop * 100}両',
               tooltip: '100人の兵士を募集します',
               onPressed: gameState.playerGold >= AppConstants.recruitmentCostPerTroop * 100 &&
-                      selectedProvince.controller == Faction.liangshan
-                  ? () => controller.recruitTroops(selectedProvince.id, 100)
+                      controller.gameState.factions[selectedProvince.name] == Faction.liangshan
+                  ? () => controller.recruitTroops(selectedProvince.name, 100)
                   : null,
             ),
             const SizedBox(width: 8),
@@ -295,8 +297,8 @@ class GameCommandBar extends StatelessWidget {
               cost: '${AppConstants.foodSupplyCost}両',
               tooltip: '兵糧を補給します（500単位）',
               onPressed: gameState.playerGold >= AppConstants.foodSupplyCost &&
-                      selectedProvince.controller == Faction.liangshan
-                  ? () => controller.supplyFood(selectedProvince.id, 500)
+                      controller.gameState.factions[selectedProvince.name] == Faction.liangshan
+                  ? () => controller.supplyFood(selectedProvince.name, 500)
                   : null,
             ),
             const SizedBox(width: 8),
@@ -319,12 +321,12 @@ class GameCommandBar extends StatelessWidget {
 
   /// 攻撃可能かチェック
   bool _canAttackFrom(WaterMarginGameController controller, Province province) {
-    if (province.controller != Faction.liangshan) return false;
+    if (controller.gameState.factions[province.name] != Faction.liangshan) return false;
 
     // 隣接州に敵がいるかチェック
-    for (final neighborId in province.adjacentProvinceIds) {
-      final neighbor = controller.gameState.provinces[neighborId];
-      if (neighbor != null && neighbor.controller != Faction.liangshan) {
+    for (final neighborName in province.neighbors) {
+      final neighbor = controller.gameState.provinces[neighborName];
+      if (neighbor != null && controller.gameState.factions[neighbor.name] != Faction.liangshan) {
         return true;
       }
     }
@@ -445,9 +447,9 @@ class GameCommandBar extends StatelessWidget {
   ) {
     // 隣接する敵州を取得
     final targets = <Province>[];
-    for (final neighborId in attackerProvince.adjacentProvinceIds) {
-      final neighbor = controller.gameState.provinces[neighborId];
-      if (neighbor != null && neighbor.controller != Faction.liangshan) {
+    for (final neighborName in attackerProvince.neighbors) {
+      final neighbor = controller.gameState.provinces[neighborName];
+      if (neighbor != null && controller.gameState.factions[neighbor.name] != Faction.liangshan) {
         targets.add(neighbor);
       }
     }
@@ -467,10 +469,11 @@ class GameCommandBar extends StatelessWidget {
                       color: Theme.of(context).colorScheme.error,
                     ),
                     title: Text(target.name),
-                    subtitle: Text('勢力: ${_getFactionName(target.controller)}'),
+                    subtitle:
+                        Text('勢力: ${_getFactionName(controller.gameState.factions[target.name] ?? Faction.neutral)}'),
                     onTap: () {
                       Navigator.of(context).pop();
-                      controller.attackProvince(target.id);
+                      controller.attackProvince(target.name);
                     },
                   ))
               .toList(),

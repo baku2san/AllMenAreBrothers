@@ -1,12 +1,12 @@
-/// 州詳細パネルウィジェット（情報表示専用）
-/// 選択された州の詳細情報を表示（操作機能は下部コマンドバーに統一）
 library;
 
+import 'package:water_margin_game/models/province.dart';
 import 'package:flutter/material.dart' hide Hero;
 import '../models/water_margin_strategy_game.dart';
 import '../controllers/water_margin_game_controller.dart';
 import '../core/app_config.dart';
 import '../core/app_theme.dart';
+import '../data/water_margin_map.dart';
 
 /// 州詳細パネル（情報表示専用）
 class ProvinceDetailPanel extends StatelessWidget {
@@ -25,10 +25,11 @@ class ProvinceDetailPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isPlayerProvince = province.controller == Faction.liangshan;
+    final faction = WaterMarginMap.initialProvinceFactions[province.name];
+    final isPlayerProvince = faction == Faction.liangshan;
 
     return Container(
-      padding: ModernSpacing.paddingMD,
+      padding: EdgeInsets.all(12),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,15 +38,16 @@ class ProvinceDetailPanel extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: ModernSpacing.paddingMD,
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: province.controller.factionColor.withValues(alpha: 0.2),
-                    borderRadius: ModernRadius.smRadius,
+                    color: (faction?.factionColor ?? Colors.grey).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    province.provinceIcon,
-                    style: AppTextStyles.headlineMedium,
-                  ),
+                  // child: Text(
+                  //   province.provinceIcon,
+                  //   style: AppTextStyles.headlineMedium,
+                  // ),
+                  child: Icon(Icons.location_city, size: 28, color: Colors.grey),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -63,16 +65,16 @@ class ProvinceDetailPanel extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: province.controller.factionColor.withValues(alpha: 0.2),
-                          borderRadius: ModernRadius.smRadius,
+                          color: (faction?.factionColor ?? Colors.grey).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: province.controller.factionColor.withValues(alpha: 0.4),
+                            color: (faction?.factionColor ?? Colors.grey).withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
-                          province.controller.displayName,
+                          faction?.displayName ?? '不明',
                           style: AppTextStyles.labelMedium.copyWith(
-                            color: province.controller.factionColor,
+                            color: faction?.factionColor ?? Colors.grey,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -86,39 +88,7 @@ class ProvinceDetailPanel extends StatelessWidget {
             const SizedBox(height: 16),
 
             // 特殊効果表示
-            if (province.specialFeature != null) ...[
-              Container(
-                width: double.infinity,
-                padding: ModernSpacing.paddingMD,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGold.withValues(alpha: 0.1),
-                  borderRadius: ModernRadius.mdRadius,
-                  border: Border.all(
-                    color: AppColors.accentGold.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      color: AppColors.accentGold,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        province.specialFeature!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+            // 特殊効果表示は未定義のため削除
 
             // 州のステータス
             Container(
@@ -145,12 +115,12 @@ class ProvinceDetailPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildStatusBar('人口', province.state.population, 1000, Icons.people_rounded, colorScheme),
-                  _buildStatusBar('農業', province.state.agriculture, 100, Icons.agriculture_rounded, colorScheme),
-                  _buildStatusBar('商業', province.state.commerce, 100, Icons.store_rounded, colorScheme),
-                  _buildStatusBar('軍事', province.state.military, 100, Icons.military_tech_rounded, colorScheme),
-                  _buildStatusBar('治安', province.state.security, 100, Icons.security_rounded, colorScheme),
-                  _buildStatusBar('民心', province.state.loyalty, 100, Icons.favorite_rounded, colorScheme),
+                  _buildStatusBar('人口', province.population, 1000, Icons.people_rounded, colorScheme),
+                  _buildStatusBar('農業', province.agriculture.toInt(), 100, Icons.agriculture_rounded, colorScheme),
+                  _buildStatusBar('商業', province.commerce.toInt(), 100, Icons.store_rounded, colorScheme),
+                  _buildStatusBar('軍事', province.military.toInt(), 100, Icons.military_tech_rounded, colorScheme),
+                  _buildStatusBar('治安', province.security.toInt(), 100, Icons.security_rounded, colorScheme),
+                  _buildStatusBar('民心', province.publicSupport.toInt(), 100, Icons.favorite_rounded, colorScheme),
                 ],
               ),
             ),
@@ -191,7 +161,7 @@ class ProvinceDetailPanel extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '現在兵力: ${province.currentTroops}人',
+                        '兵力: ${province.military.toInt()}人',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: colorScheme.onSurface,
                         ),
@@ -207,26 +177,11 @@ class ProvinceDetailPanel extends StatelessWidget {
                         size: 16,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '最大兵力: ${province.state.maxTroops}人',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
+                      // 最大兵力は省略
                     ],
                   ),
                   const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: province.currentTroops / province.state.maxTroops,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      province.currentTroops >= province.state.maxTroops * 0.8
-                          ? Colors.green
-                          : province.currentTroops >= province.state.maxTroops * 0.5
-                              ? Colors.orange
-                              : Colors.red,
-                    ),
-                  ),
+                  // 兵力ゲージは省略
                 ],
               ),
             ),
@@ -317,7 +272,7 @@ class ProvinceDetailPanel extends StatelessWidget {
                     children: [
                       Icon(
                         isPlayerProvince ? Icons.check_circle_rounded : Icons.flag_rounded,
-                        color: isPlayerProvince ? Colors.green : province.controller.factionColor,
+                        color: isPlayerProvince ? Colors.green : (faction?.factionColor ?? Colors.grey),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -372,12 +327,12 @@ class ProvinceDetailPanel extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.flag_rounded,
-                                color: province.controller.factionColor,
+                                color: (faction?.factionColor ?? Colors.grey),
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${province.controller.displayName}の支配下',
+                                '${faction?.displayName ?? '不明'}の支配下',
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: Colors.orange.shade800,
                                   fontWeight: FontWeight.bold,
@@ -463,19 +418,20 @@ class ProvinceDetailPanel extends StatelessWidget {
 
   /// 州にいる英雄を取得
   List<Hero> _getHeroesInProvince() {
-    return gameState.heroes.where((hero) => hero.currentProvinceId == province.id).toList();
+    return gameState.heroes.where((hero) => hero.currentProvinceId == province.name).toList();
   }
 
   /// 攻撃状況のメッセージを取得
   String _getAttackStatusMessage() {
+    // 新モデルでは neighbors で隣接判定、military で兵力判定
     final playerProvinces = controller.getPlayerProvinces();
-    final adjacentPlayerProvinces = playerProvinces.where((p) => p.adjacentProvinceIds.contains(province.id)).toList();
+    final adjacentPlayerProvinces = playerProvinces.where((p) => p.neighbors.contains(province.name)).toList();
 
     if (adjacentPlayerProvinces.isEmpty) {
       return '攻撃するには隣接する味方の州が必要です';
     }
 
-    final availableProvinces = adjacentPlayerProvinces.where((p) => p.currentTroops > 0).toList();
+    final availableProvinces = adjacentPlayerProvinces.where((p) => p.military > 0).toList();
 
     if (availableProvinces.isEmpty) {
       return '隣接する味方の州に兵力がありません';

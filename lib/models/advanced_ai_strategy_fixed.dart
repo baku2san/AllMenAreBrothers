@@ -3,8 +3,10 @@
 library;
 
 import '../models/water_margin_strategy_game.dart';
+import '../models/province.dart';
 import '../models/ai_system.dart';
 // import '../models/advanced_battle_system.dart';
+import '../data/water_margin_map.dart';
 
 /// AI戦略レベル
 enum AIStrategyLevel {
@@ -98,13 +100,15 @@ class AdvancedAIStrategy {
 
   /// 状況分析
   SituationAnalysis _analyzeSituation(WaterMarginGameState gameState) {
-    final ownedProvinces = gameState.provinces.values.where((p) => p.controller.name == factionId).toList();
+    final ownedProvinces = gameState.provinces.values
+        .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == factionId)
+        .toList();
 
-    final totalTroops = ownedProvinces.fold(0, (sum, p) => sum + p.currentTroops);
-    final totalEconomy = ownedProvinces.fold(0, (sum, p) => sum + p.state.commerce);
+    final totalTroops = ownedProvinces.fold(0, (sum, p) => sum + p.military.toInt());
+    final totalEconomy = ownedProvinces.fold(0, (sum, p) => sum + p.commerce.toInt());
     final averageSecurity = ownedProvinces.isEmpty
         ? 0
-        : ownedProvinces.fold(0, (sum, p) => sum + p.state.security) ~/ ownedProvinces.length;
+        : ownedProvinces.fold(0, (sum, p) => sum + (p.security * 100).toInt()) ~/ ownedProvinces.length;
 
     // 脅威レベル計算
     final threatLevel = _calculateThreatLevel(gameState, ownedProvinces);
@@ -128,10 +132,10 @@ class AdvancedAIStrategy {
     int borderingEnemies = 0;
 
     for (final province in ownedProvinces) {
-      for (final neighborId in province.adjacentProvinceIds) {
-        final neighbor = gameState.provinces[neighborId];
-        if (neighbor != null && neighbor.controller.name != factionId) {
-          totalEnemyPower += neighbor.currentTroops;
+      for (final neighborName in province.neighbors) {
+        final neighbor = gameState.provinces[neighborName];
+        if (neighbor != null && WaterMarginMap.initialProvinceFactions[neighbor.name]?.name != factionId) {
+          totalEnemyPower += neighbor.military.toInt();
           borderingEnemies++;
         }
       }
@@ -148,11 +152,11 @@ class AdvancedAIStrategy {
     final opportunities = <ExpansionOpportunity>[];
 
     for (final province in ownedProvinces) {
-      for (final neighborId in province.adjacentProvinceIds) {
-        final neighbor = gameState.provinces[neighborId];
-        if (neighbor != null && neighbor.controller.name != factionId) {
-          final powerRatio = province.currentTroops / (neighbor.currentTroops + 1);
-          final economicValue = neighbor.state.commerce + neighbor.state.agriculture;
+      for (final neighborName in province.neighbors) {
+        final neighbor = gameState.provinces[neighborName];
+        if (neighbor != null && WaterMarginMap.initialProvinceFactions[neighbor.name]?.name != factionId) {
+          final powerRatio = province.military / (neighbor.military + 1);
+          final economicValue = neighbor.commerce + neighbor.agriculture;
 
           if (powerRatio > 1.2) {
             // 勝算がある
@@ -160,7 +164,7 @@ class AdvancedAIStrategy {
               targetProvince: neighbor,
               sourceProvince: province,
               successProbability: (powerRatio * 0.5).clamp(0.0, 1.0),
-              economicValue: economicValue,
+              economicValue: economicValue.toInt(),
               strategicValue: _calculateStrategicValue(neighbor),
             ));
           }
@@ -178,14 +182,14 @@ class AdvancedAIStrategy {
   int _calculateStrategicValue(Province province) {
     int value = 0;
 
-    // 首都なら価値が高い
-    if (province.capital) value += 100;
+    // 首都なら価値が高い（未定義ならコメントアウト）
+    // if (province.capital) value += 100;
 
-    // 特殊機能があれば価値が高い
-    if (province.specialFeature != null) value += 50;
+    // 特殊機能があれば価値が高い（未定義ならコメントアウト）
+    // if (province.specialFeature != null) value += 50;
 
     // 隣接する州の数（交通の要衝）
-    value += province.adjacentProvinceIds.length * 10;
+    value += province.neighbors.length * 10;
 
     return value;
   }
@@ -295,8 +299,8 @@ class AdvancedAIStrategy {
         actions.add(AIAction(
           type: AIActionType.attack,
           priority: (opportunity.successProbability * 10).round(),
-          sourceProvinceId: opportunity.sourceProvince.id,
-          targetProvinceId: opportunity.targetProvince.id,
+          sourceProvinceId: opportunity.sourceProvince.name,
+          targetProvinceId: opportunity.targetProvince.name,
         ));
       }
     }
@@ -307,22 +311,24 @@ class AdvancedAIStrategy {
   /// 経済発展行動を計画
   List<AIAction> _planEconomicActions(WaterMarginGameState gameState) {
     final actions = <AIAction>[];
-    final ownedProvinces = gameState.provinces.values.where((p) => p.controller.name == factionId).toList();
+    final ownedProvinces = gameState.provinces.values
+        .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == factionId)
+        .toList();
 
     for (final province in ownedProvinces) {
-      if (province.state.commerce < 80) {
+      if (province.commerce < 80) {
         actions.add(AIAction(
           type: AIActionType.develop,
           priority: 7,
-          sourceProvinceId: province.id,
+          sourceProvinceId: province.name,
           developmentType: DevelopmentType.commerce,
         ));
       }
-      if (province.state.agriculture < 80) {
+      if (province.agriculture < 80) {
         actions.add(AIAction(
           type: AIActionType.develop,
           priority: 6,
-          sourceProvinceId: province.id,
+          sourceProvinceId: province.name,
           developmentType: DevelopmentType.agriculture,
         ));
       }
@@ -334,20 +340,22 @@ class AdvancedAIStrategy {
   /// 軍事強化行動を計画
   List<AIAction> _planMilitaryActions(WaterMarginGameState gameState) {
     final actions = <AIAction>[];
-    final ownedProvinces = gameState.provinces.values.where((p) => p.controller.name == factionId).toList();
+    final ownedProvinces = gameState.provinces.values
+        .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == factionId)
+        .toList();
 
     for (final province in ownedProvinces) {
       // 前線の州は兵力強化
-      final isfront = province.adjacentProvinceIds.any((id) {
-        final neighbor = gameState.provinces[id];
-        return neighbor != null && neighbor.controller.name != factionId;
+      final isfront = province.neighbors.any((neighborName) {
+        final neighbor = gameState.provinces[neighborName];
+        return neighbor != null && WaterMarginMap.initialProvinceFactions[neighbor.name]?.name != factionId;
       });
 
-      if (isfront && province.currentTroops < 500) {
+      if (isfront && province.military < 500) {
         actions.add(AIAction(
           type: AIActionType.recruit,
           priority: 8,
-          sourceProvinceId: province.id,
+          sourceProvinceId: province.name,
         ));
       }
     }
@@ -358,14 +366,16 @@ class AdvancedAIStrategy {
   /// 治安維持行動を計画
   List<AIAction> _planSecurityActions(WaterMarginGameState gameState) {
     final actions = <AIAction>[];
-    final ownedProvinces = gameState.provinces.values.where((p) => p.controller.name == factionId).toList();
+    final ownedProvinces = gameState.provinces.values
+        .where((p) => WaterMarginMap.initialProvinceFactions[p.name]?.name == factionId)
+        .toList();
 
     for (final province in ownedProvinces) {
-      if (province.state.security < 60) {
+      if (province.security < 60) {
         actions.add(AIAction(
           type: AIActionType.develop,
           priority: 5,
-          sourceProvinceId: province.id,
+          sourceProvinceId: province.name,
           developmentType: DevelopmentType.security,
         ));
       }
